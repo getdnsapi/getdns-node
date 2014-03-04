@@ -32,25 +32,17 @@
     var constants = require("./lib/constants");
     module.exports = constants;
 
-    var contexts = [];
-
     // additional exports
     module.exports.createContext = function(opts) {
-        var ctx = new getdns.Context(opts);
-        contexts.push(ctx);
-        ctx.destroy = function() {
-            var idx = contexts.indexOf(ctx);
-            if (~idx) {
-                contexts.splice(idx, 1);
-                getdns.Destroy(ctx);
-            }
-        }
+        return new getdns.Context(opts);
     }
 
-    process.on('exit', function() {
-        contexts.map(function(ctx) {
-            getdns.Destroy(ctx);
-        });
+    var ctx = module.exports.createContext();
+    ctx.getAddress("getdnsapi.net", function(e, r) {
+        console.log(r);
+        setTimeout(function() {
+            ctx.destroy();
+        }, 10);
     });
 
 })();

@@ -95,39 +95,131 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
 
 GNContext::GNContext() : context_(NULL) { }
 GNContext::~GNContext() {
+    printf("GNContext destructor.\n");
     getdns_context_destroy(context_);
     context_ = NULL;
 }
 
+static void setStub(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsTrue()) {
+        getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
+    } else {
+        getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_RECURSING);
+    }
+}
+
+static void setUpstreams(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsArray()) {
+        getdns_list* upstreams = getdns_list_create();
+        Handle<Array> values = Handle<Array>::Cast(opt);
+        for (uint32_t i = 0; i < values->Length(); ++i) {
+            Local<Value> ipOrTuple = values->Get(i);
+            getdns_dict* ipDict = NULL;
+            if (ipOrTuple->IsArray()) {
+                // two tuple - first is IP, 2nd is port
+                Handle<Array> tuple = Handle<Array>::Cast(ipOrTuple);
+                if (tuple->Length() > 0) {
+                    String::AsciiValue asciiStr(tuple->Get(0)->ToString());
+                    ipDict = getdns_util_create_ip(*asciiStr);
+                    if (ipDict && tuple->Length() > 1 &&
+                        tuple->Get(1)->IsNumber()) {
+                        // port
+                        uint32_t port = tuple->Get(1)->Uint32Value();
+                        getdns_dict_set_int(ipDict, "port", port);
+                    }
+                }
+            } else {
+                String::AsciiValue asciiStr(ipOrTuple->ToString());
+                ipDict = getdns_util_create_ip(*asciiStr);
+            }
+            if (ipDict) {
+                size_t len = 0;
+                getdns_list_get_length(upstreams, &len);
+                getdns_list_set_dict(upstreams, len, ipDict);
+                getdns_dict_destroy(ipDict);
+            } else {
+                Local<String> msg = String::Concat(String::New("Upstream value is invalid: "), ipOrTuple->ToString());
+                ThrowException(Exception::TypeError(msg));
+            }
+        }
+        getdns_return_t r = getdns_context_set_upstream_recursive_servers(context, upstreams);
+        getdns_list_destroy(upstreams);
+        if (r != GETDNS_RETURN_GOOD) {
+            ThrowException(Exception::TypeError(String::New("Failed to set upstreams.")));
+        }
+    }
+}
+
+static void setTimeout(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_timeout(context, num);
+    }
+}
+
+typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
+typedef struct OptionSetter {
+    const char* opt_name;
+    context_setter setter;
+} OptionSetter;
+
+static OptionSetter SETTERS[] = {
+    { "stub", setStub },
+    { "upstreams", setUpstreams },
+    { "timeout", setTimeout }
+};
+
+static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
+
+void GNContext::applyOptions(Handle<Value> optsV) {
+    if (!GNUtil::isDictionaryObject(optsV)) {
+        return;
+    }
+    TryCatch try_catch;
+    Local<Object> opts = optsV->ToObject();
+    Local<Array> names = opts->GetOwnPropertyNames();
+    for(unsigned int i = 0; i < names->Length(); i++) {
+        Local<Value> nameVal = names->Get(i);
+        String::AsciiValue name(nameVal);
+        Local<Value> opt = opts->Get(nameVal);
+        for (size_t s = 0; s < NUM_SETTERS; ++s) {
+            if (strcmp(SETTERS[s].opt_name, *name) == 0) {
+                SETTERS[s].setter(context_, opt);
+                break;
+            }
+        }
+        if (try_catch.HasCaught()) {
+            try_catch.ReThrow();
+            return;
+        }
+    }
+}
+
 void GNContext::Init(Handle<Object> target) {
-    // prepare constructor template
-    Local<FunctionTemplate> tpl = FunctionTemplate::New(GNContext::New);
-    tpl->SetClassName(String::NewSymbol("Context"));
-    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    // prepare context object template
+    Local<FunctionTemplate> jsContextTpl = FunctionTemplate::New(GNContext::New);
+    jsContextTpl->SetClassName(String::NewSymbol("Context"));
+    jsContextTpl->InstanceTemplate()->SetInternalFieldCount(1);
     // Prototype
-    tpl->PrototypeTemplate()->Set(String::NewSymbol("lookup"),
-        FunctionTemplate::New(GNContext::Lookup)->GetFunction());
-    tpl->PrototypeTemplate()->Set(String::NewSymbol("getAddress"),
+    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "lookup", GNContext::Lookup);
+    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "cancel", GNContext::Lookup);
+    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "destroy", GNContext::Cleanup);
+    // Helpers - delegate to the same function w/ different data
+    jsContextTpl->PrototypeTemplate()->Set(String::NewSymbol("getAddress"),
         FunctionTemplate::New(GNContext::HelperLookup, Integer::New(GNAddress))->GetFunction());
-    tpl->PrototypeTemplate()->Set(String::NewSymbol("getHostname"),
+    jsContextTpl->PrototypeTemplate()->Set(String::NewSymbol("getHostname"),
         FunctionTemplate::New(GNContext::HelperLookup, Integer::New(GNHostname))->GetFunction());
-    tpl->PrototypeTemplate()->Set(String::NewSymbol("getService"),
+    jsContextTpl->PrototypeTemplate()->Set(String::NewSymbol("getService"),
         FunctionTemplate::New(GNContext::HelperLookup, Integer::New(GNService))->GetFunction());
 
-    // TODO: cancel, setters
-
-    Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
+    // Add the constructor
+    Persistent<Function> constructor = Persistent<Function>::New(jsContextTpl->GetFunction());
     target->Set(String::NewSymbol("Context"), constructor);
-
-    // cleanup
-    Local<FunctionTemplate> cleanTpl = FunctionTemplate::New(GNContext::Cleanup);
-    Persistent<Function> clean = Persistent<Function>::New(cleanTpl->GetFunction());
-    target->Set(String::NewSymbol("Destroy"), clean);
 }
 
 Handle<Value> GNContext::Cleanup(const Arguments& args) {
     HandleScope scope;
-    GNContext* ctx = ObjectWrap::Unwrap<GNContext>(args[0]->ToObject());
+    GNContext* ctx = ObjectWrap::Unwrap<GNContext>(args.This());
     getdns_context_destroy(ctx->context_);
     ctx->context_ = NULL;
     return scope.Close(Undefined());
@@ -143,10 +235,21 @@ Handle<Value> GNContext::New(const Arguments& args) {
             delete ctx;
             ThrowException(Exception::TypeError(String::New("Unable to create GNContext.")));
         }
+        if (args.Length() > 0) {
+            // could throw an
+            TryCatch try_catch;
+            ctx->applyOptions(args[0]);
+            if (try_catch.HasCaught()) {
+                delete ctx;
+                try_catch.ReThrow();
+                return scope.Close(Undefined());
+            }
+        }
         bool attached = GNUtil::attachContextToNode(ctx->context_);
         if (!attached) {
             delete ctx;
             ThrowException(Exception::TypeError(String::New("Unable to create GNContext.")));
+            return scope.Close(Undefined());
         }
         ctx->Wrap(args.This());
         return args.This();
@@ -168,7 +271,7 @@ void GNContext::Callback(getdns_context *this_context,
         argv[1] = GNUtil::convertToJSObj(response);
         getdns_dict_destroy(response);
     } else {
-        argv[0] = makeErrorObj("Lookup failed", cbType);
+        argv[0] = makeErrorObj("Lookup failed.", cbType);
         argv[1] = Null();
     }
     TryCatch try_catch;
@@ -278,7 +381,7 @@ Handle<Value> GNContext::HelperLookup(const Arguments& args) {
     if (!last->IsFunction()) {
         ThrowException(Exception::TypeError(String::New("Final argument must be a function.")));
     }
-    Local<Function> localCb = Local<Function>::Cast(args[0]);
+    Local<Function> localCb = Local<Function>::Cast(last);
     GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());
     if (!ctx || !ctx->context_) {
         Handle<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
@@ -303,6 +406,8 @@ Handle<Value> GNContext::HelperLookup(const Arguments& args) {
     CallbackData *data = new CallbackData();
     data->callback = callback;
     data->ctx = ctx;
+    ctx->Ref();
+
     getdns_transaction_t transId;
     getdns_return_t r = GETDNS_RETURN_GOOD;
     if (funcType == GNAddress) {
@@ -339,4 +444,6 @@ Handle<Value> GNContext::HelperLookup(const Arguments& args) {
     return scope.Close(node::Encode(&transId, 8));
 }
 
+// Init the module
+NODE_MODULE(getdns, GNContext::Init)
 

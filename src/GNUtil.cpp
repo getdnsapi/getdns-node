@@ -47,38 +47,17 @@ struct getdns_libuv_data {
     uint8_t polling;
 };
 
-static void request_count_changed(uint32_t request_count, struct getdns_libuv_data *uv_data);
-
 /* lib uv callbacks */
 static void
 getdns_libuv_cb(uv_poll_t* handle, int status, int events) {
     struct getdns_context* context = (struct getdns_context*) handle->data;
     getdns_context_process_async(context);
-    uint32_t rc = getdns_context_get_num_pending_requests(context, NULL);
-    struct getdns_libuv_data* uv_data =
-        (struct getdns_libuv_data*) getdns_context_get_extension_data(context);
-    request_count_changed(rc, uv_data);
-}
-
-static void
-request_count_changed(uint32_t request_count, struct getdns_libuv_data *uv_data) {
-    if (request_count > 0 && uv_data->polling == 0) {
-        uv_poll_start(uv_data->poll_handle, UV_READABLE, getdns_libuv_cb);
-        uv_data->polling = 1;
-    } else if (request_count == 0 && uv_data->polling == 1) {
-        uv_poll_stop(uv_data->poll_handle);
-        uv_data->polling = 0;
-    }
 }
 
 static void
 getdns_libuv_timeout_cb(uv_timer_t* handle, int status) {
     getdns_timeout_data_t* timeout_data = (getdns_timeout_data_t*) handle->data;
     timeout_data->callback(timeout_data->userarg);
-    uint32_t rc = getdns_context_get_num_pending_requests(timeout_data->context, NULL);
-    struct getdns_libuv_data* uv_data =
-        (struct getdns_libuv_data*) getdns_context_get_extension_data(timeout_data->context);
-    request_count_changed(rc, uv_data);
 }
 
 static void
@@ -92,8 +71,6 @@ getdns_libuv_close_cb(uv_handle_t* handle) {
 static getdns_return_t
 getdns_libuv_request_count_changed(struct getdns_context* context,
     uint32_t request_count, void* eventloop_data) {
-    struct getdns_libuv_data *edata = (struct getdns_libuv_data*) eventloop_data;
-    request_count_changed(request_count, edata);
     return GETDNS_RETURN_GOOD;
 }
 
@@ -169,7 +146,8 @@ GNUtil::attachContextToNode(struct getdns_context* context)
     uv_poll_init(uv_loop, uv_data->poll_handle, fd);
     uv_data->poll_handle->data = context;
     uv_data->loop = uv_loop;
-    uv_data->polling = 0;
+    //uv_data->polling = 0;
+    uv_poll_start(uv_data->poll_handle, UV_READABLE, getdns_libuv_cb);
     r = getdns_extension_set_eventloop(context, &LIBUV_EXT, uv_data);
     return r == GETDNS_RETURN_GOOD;
 }
@@ -417,7 +395,7 @@ getdns_list* GNUtil::convertToList(Handle<Array> array) {
             case StringType:
                 {
                     struct getdns_bindata strdata;
-                    String::AsciiValue utf8Str(val->ToString());
+                    String::Utf8Value utf8Str(val->ToString());
                     int len = utf8Str.length();
                     strdata.data = (uint8_t*) *utf8Str;
                     strdata.size = len;
