@@ -31,32 +31,34 @@
 #include <node.h>
 #include <getdns/getdns.h>
 
+// Getdns Context wrapper for Node
 class GNContext : public node::ObjectWrap {
 public:
+    // Node module initializer
     static void Init(v8::Handle<v8::Object> target);
 
 private:
     GNContext();
     ~GNContext();
 
-    // options
+    // set options on the context
     void applyOptions(v8::Handle<v8::Value> opts);
 
-    // functions on the context
+    // JS Functions
     static v8::Handle<v8::Value> New(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Cleanup(const v8::Arguments& args);
+    static v8::Handle<v8::Value> Destroy(const v8::Arguments& args);
     static v8::Handle<v8::Value> Lookup(const v8::Arguments& args);
     static v8::Handle<v8::Value> HelperLookup(const v8::Arguments& args);
     static v8::Handle<v8::Value> Cancel(const v8::Arguments& args);
 
-    // callback
+    // Getdns Callback
     static void Callback(getdns_context *this_context,
                          getdns_callback_type_t cbType,
                          getdns_dict *response,
                          void *userArg,
                          getdns_transaction_t this_transaction_id);
 
-    // underlying context
+    // Underlying getdns_context
     struct getdns_context* context_;
 
 };

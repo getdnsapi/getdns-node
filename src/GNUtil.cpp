@@ -35,7 +35,9 @@
 
 #include <ctype.h>
 
-// Copy in from getdns uv extension so as not to be dependent on it
+// Mostly copied from getdns lib_uv extension but is long lived
+// until explicit free
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <uv.h>
@@ -44,7 +46,6 @@
 struct getdns_libuv_data {
     uv_loop_t* loop;
     uv_poll_t* poll_handle;
-    uint8_t polling;
 };
 
 /* lib uv callbacks */
@@ -71,6 +72,7 @@ getdns_libuv_close_cb(uv_handle_t* handle) {
 static getdns_return_t
 getdns_libuv_request_count_changed(struct getdns_context* context,
     uint32_t request_count, void* eventloop_data) {
+    // No op now - always polling
     return GETDNS_RETURN_GOOD;
 }
 
@@ -146,13 +148,14 @@ GNUtil::attachContextToNode(struct getdns_context* context)
     uv_poll_init(uv_loop, uv_data->poll_handle, fd);
     uv_data->poll_handle->data = context;
     uv_data->loop = uv_loop;
-    //uv_data->polling = 0;
     uv_poll_start(uv_data->poll_handle, UV_READABLE, getdns_libuv_cb);
     r = getdns_extension_set_eventloop(context, &LIBUV_EXT, uv_data);
     return r == GETDNS_RETURN_GOOD;
 }
 
 // end copy
+
+// Taken from getdns source to do label checking
 static int
 priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
 {
@@ -165,6 +168,9 @@ priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
         bindata->data[bindata->size - 1] == 0;
 }
 
+// Convert bindata into a good representational string or
+// into a buffer.  Handles dname, printable, ".",
+// and an ip address if it is under a known key
 static Handle<Value> convertBinData(getdns_bindata* data,
                                     const char* key) {
     bool printable = true;
@@ -178,10 +184,13 @@ static Handle<Value> convertBinData(getdns_bindata* data,
             break;
         }
     }
+    // basic string?
     if (printable) {
         return String::New((char*) data->data);
+    // the root
     } else if (data->size == 1 && data->data[0] == 0) {
         return String::New(".");
+    // dname
     } else if (priv_getdns_bindata_is_dname(data)) {
         char* dname = NULL;
         if (getdns_convert_dns_name_to_fqdn(data, &dname)
@@ -190,6 +199,7 @@ static Handle<Value> convertBinData(getdns_bindata* data,
             free(dname);
             return result;
         }
+    // ip address
     } else if (key != NULL &&
         (strcmp(key, "ipv4_address") == 0 ||
          strcmp(key, "ipv6_address") == 0)) {
@@ -252,6 +262,7 @@ Handle<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
     return scope.Close(array);
 }
 
+// potential helper to get the ip string of a dict
 char* getdns_dict_to_ip_string(getdns_dict* dict) {
     if (!dict) {
         return NULL;
@@ -337,6 +348,7 @@ Handle<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
     return scope.Close(result);
 }
 
+// Enums to determine what type a JSValue is
 typedef enum GetdnsType {
     IntType,
     BoolType,

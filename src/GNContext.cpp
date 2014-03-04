@@ -34,18 +34,20 @@
 
 using namespace v8;
 
+// Enum to distinguish which helper is being used.
 typedef enum LookupType {
     GNAddress = 0,
-    GNHostname = 1,
-    GNService = 2
+    GNHostname,
+    GNService
 } LookupType;
 
-
+// Callback data passed to getdns callback as userarg
 typedef struct CallbackData {
     Persistent<Function> callback;
     GNContext* ctx;
 } CallbackData;
 
+// Helper to create an error object for lookup callbacks
 static Handle<Value> makeErrorObj(const char* msg, int code) {
     Handle<Object> obj = Object::New();
     obj->Set(String::New("msg"), String::New(msg));
@@ -53,13 +55,20 @@ static Handle<Value> makeErrorObj(const char* msg, int code) {
     return obj;
 }
 
+// Helper to create an address dictionary from string
+// Must be freed by the user
 static getdns_dict* getdns_util_create_ip(const char* ip) {
+
+    getdns_return_t r;
+    const char* ipType;
+    getdns_bindata ipData;
+    uint8_t addrBuff[16];
+    size_t addrSize = 0;
+    getdns_dict* result = NULL;
+
     if (!ip) {
         return NULL;
     }
-    getdns_return_t r;
-    uint8_t addrBuff[16];
-    size_t addrSize = 0;
     // convert to bytes
     if (inet_pton(AF_INET, ip, &addrBuff) == 1) {
         addrSize = 4;
@@ -70,21 +79,20 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
         return NULL;
     }
     // create the dict
-    getdns_dict* result = getdns_dict_create();
+    result = getdns_dict_create();
     if (!result) {
         return NULL;
     }
     // set fields
-    const char* ipType = addrSize == 4 ? "IPv4" : "IPv6";
+    ipType = addrSize == 4 ? "IPv4" : "IPv6";
     r = getdns_dict_util_set_string(result, (char*) "address_type", ipType);
     if (r != GETDNS_RETURN_GOOD) {
         getdns_dict_destroy(result);
         return NULL;
     }
-    getdns_bindata data;
-    data.data = addrBuff;
-    data.size = addrSize;
-    r = getdns_dict_set_bindata(result, "address_data", &data);
+    ipData.data = addrBuff;
+    ipData.size = addrSize;
+    r = getdns_dict_set_bindata(result, "address_data", &ipData);
     if (r != GETDNS_RETURN_GOOD) {
         getdns_dict_destroy(result);
         return NULL;
@@ -92,14 +100,7 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
     return result;
 }
 
-
-GNContext::GNContext() : context_(NULL) { }
-GNContext::~GNContext() {
-    printf("GNContext destructor.\n");
-    getdns_context_destroy(context_);
-    context_ = NULL;
-}
-
+// Setter functions
 static void setStub(getdns_context* context, Handle<Value> opt) {
     if (opt->IsTrue()) {
         getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
@@ -157,6 +158,14 @@ static void setTimeout(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setUseThreads(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsTrue()) {
+        getdns_context_set_use_threads(context, 1);
+    } else {
+        getdns_context_set_use_threads(context, 0);
+    }
+}
+
 typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
 typedef struct OptionSetter {
     const char* opt_name;
@@ -166,10 +175,18 @@ typedef struct OptionSetter {
 static OptionSetter SETTERS[] = {
     { "stub", setStub },
     { "upstreams", setUpstreams },
-    { "timeout", setTimeout }
+    { "timeout", setTimeout },
+    { "use_threads", setUseThreads }
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
+// End setters
+
+GNContext::GNContext() : context_(NULL) { }
+GNContext::~GNContext() {
+    getdns_context_destroy(context_);
+    context_ = NULL;
+}
 
 void GNContext::applyOptions(Handle<Value> optsV) {
     if (!GNUtil::isDictionaryObject(optsV)) {
@@ -178,6 +195,7 @@ void GNContext::applyOptions(Handle<Value> optsV) {
     TryCatch try_catch;
     Local<Object> opts = optsV->ToObject();
     Local<Array> names = opts->GetOwnPropertyNames();
+    // Walk the SETTERS array
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
         String::AsciiValue name(nameVal);
@@ -195,6 +213,7 @@ void GNContext::applyOptions(Handle<Value> optsV) {
     }
 }
 
+// Module initialization
 void GNContext::Init(Handle<Object> target) {
     // prepare context object template
     Local<FunctionTemplate> jsContextTpl = FunctionTemplate::New(GNContext::New);
@@ -203,7 +222,7 @@ void GNContext::Init(Handle<Object> target) {
     // Prototype
     NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "lookup", GNContext::Lookup);
     NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "cancel", GNContext::Lookup);
-    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "destroy", GNContext::Cleanup);
+    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "destroy", GNContext::Destroy);
     // Helpers - delegate to the same function w/ different data
     jsContextTpl->PrototypeTemplate()->Set(String::NewSymbol("getAddress"),
         FunctionTemplate::New(GNContext::HelperLookup, Integer::New(GNAddress))->GetFunction());
@@ -217,7 +236,8 @@ void GNContext::Init(Handle<Object> target) {
     target->Set(String::NewSymbol("Context"), constructor);
 }
 
-Handle<Value> GNContext::Cleanup(const Arguments& args) {
+// Explicity destroy the context
+Handle<Value> GNContext::Destroy(const Arguments& args) {
     HandleScope scope;
     GNContext* ctx = ObjectWrap::Unwrap<GNContext>(args.This());
     getdns_context_destroy(ctx->context_);
@@ -225,47 +245,54 @@ Handle<Value> GNContext::Cleanup(const Arguments& args) {
     return scope.Close(Undefined());
 }
 
-// functions on the GNContext
+// Create a context (new op)
 Handle<Value> GNContext::New(const Arguments& args) {
     HandleScope scope;
     if (args.IsConstructCall()) {
+        // new obj
         GNContext* ctx = new GNContext();
         getdns_return_t r = getdns_context_create(&ctx->context_, 1);
         if (r != GETDNS_RETURN_GOOD) {
+            // Failed to create an underlying context
             delete ctx;
-            ThrowException(Exception::TypeError(String::New("Unable to create GNContext.")));
+            ThrowException(Exception::Error(String::New("Unable to create GNContext.")));
         }
+        // Apply options if needed
         if (args.Length() > 0) {
             // could throw an
             TryCatch try_catch;
             ctx->applyOptions(args[0]);
             if (try_catch.HasCaught()) {
+                // Need to bail
                 delete ctx;
                 try_catch.ReThrow();
                 return scope.Close(Undefined());
             }
         }
+        // Attach the context to node
         bool attached = GNUtil::attachContextToNode(ctx->context_);
         if (!attached) {
+            // Bail
             delete ctx;
-            ThrowException(Exception::TypeError(String::New("Unable to create GNContext.")));
+            ThrowException(Exception::Error(String::New("Unable to attach to Node.")));
             return scope.Close(Undefined());
         }
         ctx->Wrap(args.This());
         return args.This();
     } else {
-        ThrowException(Exception::TypeError(String::New("Must use new.")));
+        ThrowException(Exception::Error(String::New("Must use new.")));
     }
     return scope.Close(Undefined());
 }
 
-void GNContext::Callback(getdns_context *this_context,
+void GNContext::Callback(getdns_context *context,
                          getdns_callback_type_t cbType,
                          getdns_dict *response,
                          void *userArg,
-                         getdns_transaction_t this_transaction_id) {
+                         getdns_transaction_t transId) {
     CallbackData* data = static_cast<CallbackData*>(userArg);
-    Handle<Value> argv[2];
+    // Setup the callback arguments
+    Handle<Value> argv[3];
     if (cbType == GETDNS_CALLBACK_COMPLETE) {
         argv[0] = Null();
         argv[1] = GNUtil::convertToJSObj(response);
@@ -275,15 +302,17 @@ void GNContext::Callback(getdns_context *this_context,
         argv[1] = Null();
     }
     TryCatch try_catch;
-    data->callback->Call(Context::GetCurrent()->Global(), 2, argv);
-    if (try_catch.HasCaught())
-        node::FatalException(try_catch);
-
+    argv[2] = node::Encode(&transId, 8);
+    data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+    // Unref
     data->ctx->Unref();
     data->callback.Dispose();
     delete data;
+    if (try_catch.HasCaught())
+        try_catch.ReThrow();
 }
 
+// Cancel a req.  Expect it to be a transaction id as a buffer
 Handle<Value> GNContext::Cancel(const Arguments& args) {
     HandleScope scope;
     GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());

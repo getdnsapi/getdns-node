@@ -37,12 +37,4 @@
         return new getdns.Context(opts);
     }
 
-    var ctx = module.exports.createContext();
-    ctx.getAddress("getdnsapi.net", function(e, r) {
-        console.log(r);
-        setTimeout(function() {
-            ctx.destroy();
-        }, 10);
-    });
-
 })();

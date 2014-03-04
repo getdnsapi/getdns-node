@@ -4,8 +4,16 @@
     "description" : "getdns bindings for Node.js",
     "main" : "getdns.js",
     "gypfile" : true,
-    "private" : true,
+    "author" : {
+        "name" : "Neel Goyal"
+    },
     "dependencies" : {
         "bindings" : "*"
-    }
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "expect.js" : "*",
+        "async" : "*"
+    },
+    "private" : true
 }

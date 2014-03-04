@@ -36,18 +36,24 @@ struct getdns_context;
 
 using namespace v8;
 
+// Utility class to do some conversions
 class GNUtil {
 public:
 
     ~GNUtil() { }
 
+    // Attach a context to node
     static bool attachContextToNode(struct getdns_context* context);
 
+    // Conversions from getdns -> JS
     static Handle<Value> convertToJSArray(struct getdns_list* list);
     static Handle<Value> convertToJSObj(struct getdns_dict* dict);
+
+    // Conversions from JS -> getdns
     static struct getdns_list* convertToList(Handle<Array> array);
     static struct getdns_dict* convertToDict(Handle<Object> obj);
 
+    // Helper to determine if an object is a plain dict
     static bool isDictionaryObject(Handle<Value> obj);
 
 private:
