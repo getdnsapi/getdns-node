@@ -1,0 +1,11 @@
+{
+    "name" : "getdns",
+    "version" : "0.1.0",
+    "description" : "getdns bindings for Node.js",
+    "main" : "getdns.js",
+    "gypfile" : true,
+    "private" : true,
+    "dependencies" : {
+        "bindings" : "*"
+    }
+}
