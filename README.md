@@ -18,7 +18,7 @@ Or to build from source:
 API Examples
 ============
 
-```
+```javascript
 var getdns = require('getdns');
 var options = {
   // option for stub resolver context
@@ -81,7 +81,7 @@ Bindatas are converted to strings when possible:
 
 All other bindata objects are converted into Node.js buffers (represented below as <node buffer>)
 
-```
+```javascript
 {
   "answer_type": 800,
   "canonical_name": "getdnsapi.net.",
@@ -221,3 +221,12 @@ All other bindata objects are converted into Node.js buffers (represented below 
   "status": 900
 }
 ```
+
+Testing
+=======
+
+Mocha is used to test the bindings.
+
+- npm install -g mocha
+- mocha
+
