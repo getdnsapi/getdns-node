@@ -56,6 +56,8 @@ describe("getdns test", function() {
     describe("Context Query", function() {
 
         var finish = function(ctx, done) {
+            // if hitting 0.1.0 official, set timeout is needed
+            // 0.1.1+ should allow destroy in callback
             setTimeout(function() {
                 ctx.destroy();
                 done();
@@ -135,6 +137,21 @@ describe("getdns test", function() {
                 finish(ctx, done);
             });
         })
+
+        // cancel
+        it("should cancel the query", function(done) {
+            var ctx = getdns.createContext({"stub" : true});
+            var transId = ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.be.ok();
+                expect(result).to.not.be.ok();
+                expect(err).to.have.property('msg')
+                expect(err).to.have.property('code')
+                finish(ctx, done);
+            });
+            expect(transId).to.be.ok();
+            expect(ctx.cancel(transId)).to.be.ok();
+        });
     });
+
 
 });

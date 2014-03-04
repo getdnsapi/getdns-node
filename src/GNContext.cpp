@@ -221,7 +221,7 @@ void GNContext::Init(Handle<Object> target) {
     jsContextTpl->InstanceTemplate()->SetInternalFieldCount(1);
     // Prototype
     NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "lookup", GNContext::Lookup);
-    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "cancel", GNContext::Lookup);
+    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "cancel", GNContext::Cancel);
     NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "destroy", GNContext::Destroy);
     // Helpers - delegate to the same function w/ different data
     jsContextTpl->PrototypeTemplate()->Set(String::NewSymbol("getAddress"),
