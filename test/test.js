@@ -120,6 +120,21 @@ describe("getdns test", function() {
                 finish(ctx, done);
             });
         });
+
+        // timeouts
+        it("should timeout", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "timeout" : 1
+            });
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.be.ok();
+                expect(result).to.not.be.ok();
+                expect(err).to.have.property('msg')
+                expect(err).to.have.property('code')
+                finish(ctx, done);
+            });
+        })
     });
 
 });
