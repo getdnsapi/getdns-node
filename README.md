@@ -29,7 +29,9 @@ var options = {
     ["127.0.0.1", 9053]
   ],
   // request timeout time in millis
-  timeout : 1000
+  timeout : 1000,
+  // always return dnssec status
+  return_dnssec_status : true
 };
 
 // getdns query callback
@@ -47,7 +49,7 @@ var context = getdns.createContext(options);
 // getdns general
 // third argument may be a dictionary for extensions
 // last argument must be a callback
-var transactionId = context.lookup("getdnsapi.net", getdns.RR_TYPE_A, callback);
+var transactionId = context.lookup("getdnsapi.net", getdns.RRTYPE_A, callback);
 
 // cancel a request
 context.cancel(transactionId);

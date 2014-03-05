@@ -159,11 +159,13 @@ static void setTimeout(getdns_context* context, Handle<Value> opt) {
 }
 
 static void setUseThreads(getdns_context* context, Handle<Value> opt) {
-    if (opt->IsTrue()) {
-        getdns_context_set_use_threads(context, 1);
-    } else {
-        getdns_context_set_use_threads(context, 0);
-    }
+    int val = opt->IsTrue() ? 1 : 0;
+    getdns_context_set_use_threads(context, val);
+}
+
+static void setReturnDnssecStatus(getdns_context* context, Handle<Value> opt) {
+    int val = opt->IsTrue() ? GETDNS_EXTENSION_TRUE : GETDNS_EXTENSION_FALSE;
+    getdns_context_set_return_dnssec_status(context, val);
 }
 
 typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
@@ -176,7 +178,8 @@ static OptionSetter SETTERS[] = {
     { "stub", setStub },
     { "upstreams", setUpstreams },
     { "timeout", setTimeout },
-    { "use_threads", setUseThreads }
+    { "use_threads", setUseThreads },
+    { "return_dnssec_status", setReturnDnssecStatus }
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
