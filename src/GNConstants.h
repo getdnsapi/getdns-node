@@ -25,43 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _GN_UTIL_H_
-#define _GN_UTIL_H_
+#ifndef _GNCONSTANTS_H_
+#define _GNCONSTANTS_H_
 
 #include <node.h>
 
-struct getdns_dict;
-struct getdns_list;
-struct getdns_context;
-
-using namespace v8;
-
-// Utility class to do some conversions
-class GNUtil {
+// Getdns Context wrapper for Node
+class GNConstants : public node::ObjectWrap {
 public:
-
-    // Attach a context to node
-    static bool attachContextToNode(struct getdns_context* context);
-
-    // Conversions from getdns -> JS
-    static Handle<Value> convertToJSArray(struct getdns_list* list);
-    static Handle<Value> convertToJSObj(struct getdns_dict* dict);
-
-    // Conversions from JS -> getdns
-    static struct getdns_list* convertToList(Handle<Array> array);
-    static struct getdns_dict* convertToDict(Handle<Object> obj);
-
-    // Helper to determine if an object is a plain dict
-    static bool isDictionaryObject(Handle<Value> obj);
-
+    // Node module initializer
+    static void Init(v8::Handle<v8::Object> exports);
 private:
-
-    // utility class
-    GNUtil() { }
-    ~GNUtil() { }
-    GNUtil( const GNUtil& gn);
-    void operator=( const GNUtil& );
-
+    GNConstants() { }
+    ~GNConstants() { }
 };
 
 #endif

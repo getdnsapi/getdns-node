@@ -27,6 +27,7 @@
 
 #include "GNContext.h"
 #include "GNUtil.h"
+#include "GNConstants.h"
 
 #include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
@@ -237,6 +238,9 @@ void GNContext::Init(Handle<Object> target) {
     // Add the constructor
     Persistent<Function> constructor = Persistent<Function>::New(jsContextTpl->GetFunction());
     target->Set(String::NewSymbol("Context"), constructor);
+
+    // Export constants
+    GNConstants::Init(target);
 }
 
 // Explicity destroy the context

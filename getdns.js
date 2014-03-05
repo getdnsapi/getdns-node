@@ -28,11 +28,10 @@
 (function() {
     var getdns = require("bindings")("getdns");
 
-    // export constants
-    var constants = require("./lib/constants");
-    module.exports = constants;
+    // export constants directly
+    module.exports = getdns.constants;
 
-    // additional exports
+    // wrap context creation
     module.exports.createContext = function(opts) {
         return new getdns.Context(opts);
     }

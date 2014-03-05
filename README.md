@@ -116,6 +116,7 @@ All other bindata objects are converted into Node.js buffers (represented below 
 
       ],
       "canonical_name": "getdnsapi.net.",
+      "dnssec_status": 403,
       "header": {
         "aa": 0,
         "ad": 0,
@@ -196,6 +197,7 @@ All other bindata objects are converted into Node.js buffers (represented below 
 
       ],
       "canonical_name": "getdnsapi.net.",
+      "dnssec_status": 403,
       "header": {
         "aa": 0,
         "ad": 0,
@@ -222,6 +224,17 @@ All other bindata objects are converted into Node.js buffers (represented below 
   ],
   "status": 900
 }
+```
+
+### Constants
+
+All constants defined in `<getdns/getdns.h>` are exposed in the module.  The GETDNS_ prefix is removed.  As an example, to get filter out only secure replies, one may do something like:
+
+```javascript
+var secured = replies.filter(function(reply) {
+    return reply.dnssec_status == getdns.DNSSEC_SECURE;
+});
+
 ```
 
 Testing
