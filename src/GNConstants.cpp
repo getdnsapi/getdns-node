@@ -31,13 +31,13 @@
 using namespace v8;
 
 static inline void SetConstant(const char* name, int value, Handle<Object> exports) {
-    exports->Set(String::New(name), Integer::New(value), ReadOnly);
+    exports->Set(String::NewSymbol(name), Integer::New(value), ReadOnly);
 }
 
 void GNConstants::Init(Handle<Object> target) {
 
-    Handle<Object> exports = Object::New();
-    target->Set(String::New("constants"), exports);
+    Persistent<Object> exports = Persistent<Object>::New(Object::New());
+    target->Set(String::NewSymbol("constants"), exports);
 
     SetConstant("RETURN_GOOD",GETDNS_RETURN_GOOD,exports);
     SetConstant("RETURN_GENERIC_ERROR",GETDNS_RETURN_GENERIC_ERROR,exports);

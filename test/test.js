@@ -53,16 +53,14 @@ describe("getdns test", function() {
         });
     });
 
-    describe("Context Query", function() {
+    var finish = function(ctx, done) {
+        // if hitting 0.1.0 official, set timeout is needed
+        console.log("Destroying.");
+        ctx.destroy();
+        done();
+    }
 
-        var finish = function(ctx, done) {
-            // if hitting 0.1.0 official, set timeout is needed
-            // 0.1.1+ should allow destroy in callback
-            setTimeout(function() {
-                ctx.destroy();
-                done();
-            }, 20);
-        }
+    describe("Context Query", function() {
 
         it("should get valid results on lookup getdnsapi.net", function(done) {
             var ctx = getdns.createContext({"stub" : true});
@@ -146,12 +144,33 @@ describe("getdns test", function() {
                 expect(result).to.not.be.ok();
                 expect(err).to.have.property('msg')
                 expect(err).to.have.property('code')
-                finish(ctx, done);
+                expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
+                // need to set timeout here
+                setTimeout(function() {
+                    finish(ctx, done);
+                }, 10)
             });
             expect(transId).to.be.ok();
             expect(ctx.cancel(transId)).to.be.ok();
         });
     });
 
+    describe("DNSSEC options", function() {
+        it("should return with dnssec_status", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : true
+            });
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                result.replies_tree.map(function(reply) {
+                    expect(reply).to.have.property('dnssec_status');
+                });
+                finish(ctx, done);
+            });
+        });
+    });
 
 });
