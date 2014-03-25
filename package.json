@@ -1,6 +1,6 @@
 {
     "name" : "getdns",
-    "version" : "0.1.0",
+    "version" : "0.1.1",
     "description" : "getdns bindings for Node.js.  Requires getdns 0.1.1 or above.",
     "main" : "getdns.js",
     "gypfile" : true,
@@ -14,5 +14,6 @@
         "mocha": "*",
         "expect.js" : "*",
         "async" : "*"
-    }
+    },
+    "engine": "node 0.10.*"
 }
