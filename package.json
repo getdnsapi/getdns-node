@@ -7,6 +7,10 @@
     "author" : {
         "name" : "Neel Goyal"
     },
+    "repository" : {
+        "type" : "git",
+        "url" : "https://github.com/getdnsapi/getdns-node.git"
+    },
     "dependencies" : {
         "bindings" : "*"
     },
@@ -14,6 +18,5 @@
         "mocha": "*",
         "expect.js" : "*",
         "async" : "*"
-    },
-    "engine": "node 0.10.*"
+    }
 }
