@@ -33,7 +33,20 @@
 
     // wrap context creation
     module.exports.createContext = function(opts) {
-        return new getdns.Context(opts);
+        var ctx = new getdns.Context(opts);
+        var oldDestroyFunc = ctx.destroy;
+        var destroyed = false;
+        ctx.destroy = function() {
+            if (destroyed) {
+                return false;
+            }
+            destroyed = true;
+            process.nextTick(function() {
+                oldDestroyFunc.call(ctx);
+            });
+            return true;
+        }
+        return ctx;
     }
 
 })();

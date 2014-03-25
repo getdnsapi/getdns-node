@@ -54,9 +54,9 @@ describe("getdns test", function() {
     });
 
     var finish = function(ctx, done) {
-        // if hitting 0.1.0 official, set timeout is needed
-        console.log("Destroying.");
-        ctx.destroy();
+        // destroying a context within a callback is not allowed
+        expect(ctx.destroy()).to.be.ok();
+        expect(ctx.destroy()).to.not.be.ok();
         done();
     }
 
@@ -145,10 +145,7 @@ describe("getdns test", function() {
                 expect(err).to.have.property('msg')
                 expect(err).to.have.property('code')
                 expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
-                // need to set timeout here
-                setTimeout(function() {
-                    finish(ctx, done);
-                }, 10)
+                finish(ctx, done);
             });
             expect(transId).to.be.ok();
             expect(ctx.cancel(transId)).to.be.ok();

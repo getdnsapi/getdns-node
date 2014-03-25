@@ -247,9 +247,12 @@ void GNContext::Init(Handle<Object> target) {
 Handle<Value> GNContext::Destroy(const Arguments& args) {
     HandleScope scope;
     GNContext* ctx = ObjectWrap::Unwrap<GNContext>(args.This());
+    if (!ctx) {
+        ThrowException(Exception::Error(String::New("Context is invalid.")));
+    }
     getdns_context_destroy(ctx->context_);
     ctx->context_ = NULL;
-    return scope.Close(Undefined());
+    return scope.Close(True());
 }
 
 // Create a context (new op)
