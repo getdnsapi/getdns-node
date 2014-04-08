@@ -34,6 +34,7 @@
 #include "GNUtil.h"
 
 #include <ctype.h>
+#include <string.h>
 
 // Mostly copied from getdns lib_uv extension but is long lived
 // until explicit free

@@ -32,6 +32,7 @@
 #include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
 #include <node_buffer.h>
+#include <string.h>
 
 using namespace v8;
 
