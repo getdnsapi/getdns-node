@@ -58,7 +58,7 @@ describe("getdns test", function() {
         expect(ctx.destroy()).to.be.ok();
         expect(ctx.destroy()).to.not.be.ok();
         done();
-    }
+    };
 
     describe("Context Query", function() {
 
@@ -130,11 +130,11 @@ describe("getdns test", function() {
             ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.be.ok();
                 expect(result).to.not.be.ok();
-                expect(err).to.have.property('msg')
-                expect(err).to.have.property('code')
+                expect(err).to.have.property('msg');
+                expect(err).to.have.property('code');
                 finish(ctx, done);
             });
-        })
+        });
 
         // cancel
         it("should cancel the query", function(done) {
@@ -142,13 +142,30 @@ describe("getdns test", function() {
             var transId = ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.be.ok();
                 expect(result).to.not.be.ok();
-                expect(err).to.have.property('msg')
-                expect(err).to.have.property('code')
+                expect(err).to.have.property('msg');
+                expect(err).to.have.property('code');
                 expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
                 finish(ctx, done);
             });
             expect(transId).to.be.ok();
             expect(ctx.cancel(transId)).to.be.ok();
+        });
+
+        // type
+        it("should have a buffer as rdata_raw", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : true
+            });
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok(err);
+                expect(result).to.be.ok();
+                expect(result.replies_full).to.be.an(Array);
+                expect(result.replies_full).to.not.be.empty();
+                result.replies_full.map(function(r) {
+                    expect(r).to.be.an(Buffer);
+                });
+                finish(ctx, done);
+            });
         });
     });
 

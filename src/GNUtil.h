@@ -46,6 +46,7 @@ public:
     // Conversions from getdns -> JS
     static Handle<Value> convertToJSArray(struct getdns_list* list);
     static Handle<Value> convertToJSObj(struct getdns_dict* dict);
+    static Handle<Value> convertToBuffer(void* data, size_t size);
 
     // Conversions from JS -> getdns
     static struct getdns_list* convertToList(Handle<Array> array);

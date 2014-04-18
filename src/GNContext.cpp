@@ -313,14 +313,16 @@ void GNContext::Callback(getdns_context *context,
         argv[1] = Null();
     }
     TryCatch try_catch;
-    argv[2] = node::Encode(&transId, 8);
+    argv[2] = GNUtil::convertToBuffer(&transId, 8);
     data->callback->Call(Context::GetCurrent()->Global(), 3, argv);
+
+    if (try_catch.HasCaught())
+        node::FatalException(try_catch);
+
     // Unref
     data->ctx->Unref();
     data->callback.Dispose();
     delete data;
-    if (try_catch.HasCaught())
-        try_catch.ReThrow();
 }
 
 // Cancel a req.  Expect it to be a transaction id as a buffer
@@ -333,10 +335,11 @@ Handle<Value> GNContext::Cancel(const Arguments& args) {
     if (args.Length() < 1) {
         return scope.Close(False());
     }
-    uint64_t transId;
-    if (node::DecodeWrite((char*) &transId, 8, args[0], node::BINARY) != 8) {
+    if (node::Buffer::Length(args[0]) != 8) {
         return scope.Close(False());
     }
+    uint64_t transId;
+    memcpy(&transId, node::Buffer::Data(args[0]), 8);
     getdns_return_t r = getdns_cancel_callback(ctx->context_, transId);
     return scope.Close(r == GETDNS_RETURN_GOOD ? True() : False());
 }
@@ -403,7 +406,7 @@ Handle<Value> GNContext::Lookup(const Arguments& args) {
         return scope.Close(Undefined());
     }
     // done.
-    return scope.Close(node::Encode(&transId, 8));
+    return scope.Close(GNUtil::convertToBuffer(&transId, 8));
 }
 
 // Common function to handle getdns_address/service/hostname
@@ -481,7 +484,7 @@ Handle<Value> GNContext::HelperLookup(const Arguments& args) {
         return scope.Close(Undefined());
     }
     // done. return as buffer
-    return scope.Close(node::Encode(&transId, 8));
+    return scope.Close(GNUtil::convertToBuffer(&transId, 8));
 }
 
 // Init the module

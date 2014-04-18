@@ -167,6 +167,7 @@ priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
         bindata->data[bindata->size - 1] == 0;
 }
 
+
 // Convert bindata into a good representational string or
 // into a buffer.  Handles dname, printable, ".",
 // and an ip address if it is under a known key
@@ -211,7 +212,18 @@ static Handle<Value> convertBinData(getdns_bindata* data,
     }
     // getting here implies we don't know how to convert it
     // to a string.
-    return node::Encode(data->data, data->size, node::BINARY);
+    return GNUtil::convertToBuffer(data->data, data->size);
+}
+
+Handle<Value> GNUtil::convertToBuffer(void* data, size_t size) {
+    Local<Function> buffConstructor = Local<Function>::Cast(Context::GetCurrent()->Global()->Get(String::New("Buffer")));
+    //construct a new buffer of the size we need.
+    Handle<Value> args[1] = { Integer::New(size) };
+    Local<Object> nodeBuffer = buffConstructor->NewInstance(1, args);
+
+    //Copy the contents of our payload into the buffer
+    memcpy(node::Buffer::Data(nodeBuffer), data, size);
+    return nodeBuffer;
 }
 
 Handle<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
