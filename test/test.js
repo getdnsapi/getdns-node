@@ -169,7 +169,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("DNSSEC options", function() {
+    describe("DNSSEC", function() {
         it("should return with dnssec_status", function(done) {
             var ctx = getdns.createContext({
                 "stub" : true,
@@ -185,16 +185,11 @@ describe("getdns test", function() {
                 finish(ctx, done);
             });
         });
-    });
 
-    describe("DNSSEC options", function() {
-        it("should return with dnssec_status getdns.DNSSEC_SECURE", function(done) {
+        it("should return with dnssec_status getdns.DNSSEC_SECURE when not in stub mode", function(done) {
             var ctx = getdns.createContext({
                 "stub" : false,
-                "return_dnssec_status" : true,
-                "upstreams" : [
-                    "8.8.8.8"
-                ]
+                "return_dnssec_status" : true
             });
             ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.not.be.ok();
