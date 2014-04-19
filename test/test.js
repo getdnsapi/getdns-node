@@ -187,4 +187,23 @@ describe("getdns test", function() {
         });
     });
 
+    describe("DNSSEC options", function() {
+        it("should return with dnssec_status getdns.DNSSEC_SECURE", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : false,
+                "return_dnssec_status" : true,
+                "upstreams" : [
+                    "8.8.8.8"
+                ]
+            });
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok();
+                result.replies_tree.map(function(reply) {
+                    expect(reply).to.have.property('dnssec_status', getdns.DNSSEC_SECURE);
+                });
+                finish(ctx, done);
+            });
+        });
+    });
+
 });
