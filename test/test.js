@@ -169,7 +169,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("DNSSEC options", function() {
+    describe("DNSSEC", function() {
         it("should return with dnssec_status", function(done) {
             var ctx = getdns.createContext({
                 "stub" : true,
@@ -181,6 +181,20 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.not.be.empty();
                 result.replies_tree.map(function(reply) {
                     expect(reply).to.have.property('dnssec_status');
+                });
+                finish(ctx, done);
+            });
+        });
+
+        it("should return with dnssec_status getdns.DNSSEC_SECURE when not in stub mode", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : false,
+                "return_dnssec_status" : true
+            });
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok();
+                result.replies_tree.map(function(reply) {
+                    expect(reply).to.have.property('dnssec_status', getdns.DNSSEC_SECURE);
                 });
                 finish(ctx, done);
             });
