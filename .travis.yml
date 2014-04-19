@@ -12,4 +12,3 @@ before_install:
   - sudo ldconfig
 node_js:
   - "0.10"
-  - "0.8"
