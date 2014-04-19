@@ -18,5 +18,9 @@
         "mocha": "*",
         "expect.js" : "*",
         "async" : "*"
+    },
+    "scripts": {
+        "preinstall": "node-gyp clean rebuild",
+        "test": "./node_modules/.bin/mocha"
     }
 }
