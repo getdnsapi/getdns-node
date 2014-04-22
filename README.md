@@ -1,6 +1,8 @@
 getdns-node
 ===========
 
+[![Build Status](https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master)](https://travis-ci.org/getdnsapi/getdns-node)
+
 Node.js bindings for the [getdnsapi](http://getdnsapi.net) implementation of [getdns](http://vpnc.org/getdns-api/).
 
 
