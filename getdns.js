@@ -25,28 +25,25 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-(function() {
-    var getdns = require("bindings")("getdns");
+var getdns = require("bindings")("getdns");
 
-    // export constants directly
-    module.exports = getdns.constants;
+// export constants directly
+module.exports = getdns.constants;
 
-    // wrap context creation
-    module.exports.createContext = function(opts) {
-        var ctx = new getdns.Context(opts);
-        var oldDestroyFunc = ctx.destroy;
-        var destroyed = false;
-        ctx.destroy = function() {
-            if (destroyed) {
-                return false;
-            }
-            destroyed = true;
-            process.nextTick(function() {
-                oldDestroyFunc.call(ctx);
-            });
-            return true;
+// wrap context creation
+module.exports.createContext = function(opts) {
+    var ctx = new getdns.Context(opts);
+    var oldDestroyFunc = ctx.destroy;
+    var destroyed = false;
+    ctx.destroy = function() {
+        if (destroyed) {
+            return false;
         }
-        return ctx;
-    }
-
-})();
+        destroyed = true;
+        process.nextTick(function() {
+            oldDestroyFunc.call(ctx);
+        });
+        return true;
+    };
+    return ctx;
+};
