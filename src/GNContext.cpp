@@ -103,6 +103,16 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
 }
 
 // Setter functions
+typedef getdns_return_t (*getdns_context_uint8_t_setter)(getdns_context*, uint8_t);
+typedef getdns_return_t (*getdns_context_uint16_t_setter)(getdns_context*, uint16_t);
+
+static void setTransport(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_dns_transport(context, (getdns_transport_t) num);
+    }
+}
+
 static void setStub(getdns_context* context, Handle<Value> opt) {
     if (opt->IsTrue()) {
         getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
@@ -181,10 +191,37 @@ static OptionSetter SETTERS[] = {
     { "upstreams", setUpstreams },
     { "timeout", setTimeout },
     { "use_threads", setUseThreads },
-    { "return_dnssec_status", setReturnDnssecStatus }
+    { "return_dnssec_status", setReturnDnssecStatus },
+    { "dns_transport", setTransport}
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
+
+typedef struct Uint8OptionSetter {
+    const char* opt_name;
+    getdns_context_uint8_t_setter setter;
+} Uint8OptionSetter;
+
+static Uint8OptionSetter UINT8_OPTION_SETTERS[] = {
+    { "edns_extended_rcode", getdns_context_set_edns_extended_rcode },
+    { "edns_version", getdns_context_set_edns_version },
+    { "edns_do_bit", getdns_context_set_edns_do_bit }
+};
+
+static size_t NUM_UINT8_SETTERS = sizeof(UINT8_OPTION_SETTERS) / sizeof(Uint8OptionSetter);
+
+typedef struct Uint16OptionSetter {
+    const char* opt_name;
+    getdns_context_uint16_t_setter setter;
+} Uint16OptionSetter;
+
+static Uint16OptionSetter UINT16_OPTION_SETTERS[] = {
+    { "limit_outstanding_queries", getdns_context_set_limit_outstanding_queries },
+    { "edns_maximum_udp_payloadSize", getdns_context_set_edns_maximum_udp_payload_size }
+};
+
+static size_t NUM_UINT16_SETTERS = sizeof(UINT16_OPTION_SETTERS) / sizeof(Uint16OptionSetter);
+
 // End setters
 
 GNContext::GNContext() : context_(NULL) { }
@@ -200,15 +237,38 @@ void GNContext::applyOptions(Handle<Value> optsV) {
     TryCatch try_catch;
     Local<Object> opts = optsV->ToObject();
     Local<Array> names = opts->GetOwnPropertyNames();
+    size_t s = 0;
     // Walk the SETTERS array
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
+        bool found = false;
         String::AsciiValue name(nameVal);
         Local<Value> opt = opts->Get(nameVal);
-        for (size_t s = 0; s < NUM_SETTERS; ++s) {
+        for (s = 0; s < NUM_SETTERS && !found; ++s) {
             if (strcmp(SETTERS[s].opt_name, *name) == 0) {
                 SETTERS[s].setter(context_, opt);
+                found = true;
                 break;
+            }
+        }
+        for (s = 0; s < NUM_UINT8_SETTERS && !found; ++s) {
+            if (strcmp(UINT8_OPTION_SETTERS[s].opt_name, *name) == 0) {
+                found = true;
+                if (!opt->IsNumber()) {
+                    break;
+                }
+                uint32_t optVal = opt->Uint32Value();
+                UINT8_OPTION_SETTERS[s].setter(context_, (uint8_t)optVal);
+            }
+        }
+        for (s = 0; s < NUM_UINT16_SETTERS && !found; ++s) {
+            if (strcmp(UINT16_OPTION_SETTERS[s].opt_name, *name) == 0) {
+                found = true;
+                if (!opt->IsNumber()) {
+                    break;
+                }
+                uint32_t optVal = opt->Uint32Value();
+                UINT16_OPTION_SETTERS[s].setter(context_, (uint16_t)optVal);
             }
         }
         if (try_catch.HasCaught()) {
