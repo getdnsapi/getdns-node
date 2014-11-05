@@ -83,6 +83,7 @@ void GNConstants::Init(Handle<Object> target) {
     SetConstant("RESPSTATUS_NO_NAME",GETDNS_RESPSTATUS_NO_NAME,exports);
     SetConstant("RESPSTATUS_ALL_TIMEOUT",GETDNS_RESPSTATUS_ALL_TIMEOUT,exports);
     SetConstant("RESPSTATUS_NO_SECURE_ANSWERS",GETDNS_RESPSTATUS_NO_SECURE_ANSWERS,exports);
+    SetConstant("RESPSTATUS_ALL_BOGUS_ANSWERS",GETDNS_RESPSTATUS_ALL_BOGUS_ANSWERS,exports);
     SetConstant("EXTENSION_TRUE",GETDNS_EXTENSION_TRUE,exports);
     SetConstant("EXTENSION_FALSE",GETDNS_EXTENSION_FALSE,exports);
     SetConstant("BAD_DNS_CNAME_IN_TARGET",GETDNS_BAD_DNS_CNAME_IN_TARGET,exports);
@@ -144,6 +145,8 @@ void GNConstants::Init(Handle<Object> target) {
     SetConstant("RRTYPE_RKEY",GETDNS_RRTYPE_RKEY,exports);
     SetConstant("RRTYPE_TALINK",GETDNS_RRTYPE_TALINK,exports);
     SetConstant("RRTYPE_CDS",GETDNS_RRTYPE_CDS,exports);
+    SetConstant("RRTYPE_CDNSKEY",GETDNS_RRTYPE_CDNSKEY,exports);
+    SetConstant("RRTYPE_OPENPGPKEY",GETDNS_RRTYPE_OPENPGPKEY,exports);
     SetConstant("RRTYPE_SPF",GETDNS_RRTYPE_SPF,exports);
     SetConstant("RRTYPE_UINFO",GETDNS_RRTYPE_UINFO,exports);
     SetConstant("RRTYPE_UID",GETDNS_RRTYPE_UID,exports);
