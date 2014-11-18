@@ -9,7 +9,7 @@ Node.js bindings for the [getdnsapi](http://getdnsapi.net) implementation of [ge
 Installation and Requirements
 =============================
 
-- An installation of getdns 0.1.1 or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
+- An installation of getdns 0.1.5 or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
 - `npm install getdns`
 
 Or to build from source:
