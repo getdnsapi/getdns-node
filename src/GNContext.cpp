@@ -121,6 +121,13 @@ static void setStub(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setResolutionType(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_resolution_type(context, (getdns_resolution_t) num);
+    }
+}
+
 static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
@@ -189,10 +196,12 @@ typedef struct OptionSetter {
 static OptionSetter SETTERS[] = {
     { "stub", setStub },
     { "upstreams", setUpstreams },
+    { "upstream_recursive_servers", setUpstreams },
     { "timeout", setTimeout },
     { "use_threads", setUseThreads },
     { "return_dnssec_status", setReturnDnssecStatus },
-    { "dns_transport", setTransport}
+    { "dns_transport", setTransport},
+    { "resolution_type", setResolutionType }
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
@@ -223,6 +232,62 @@ static Uint16OptionSetter UINT16_OPTION_SETTERS[] = {
 static size_t NUM_UINT16_SETTERS = sizeof(UINT16_OPTION_SETTERS) / sizeof(Uint16OptionSetter);
 
 // End setters
+Handle<Value> GNContext::GetContextValue(Local<String> property, const v8::AccessorInfo& info) {
+    // context has no getters yet
+    return Integer::New(-1);
+}
+void GNContext::SetContextValue(Local<String> property, Local<Value> opt,
+                                       const v8::AccessorInfo& info) {
+    // walk setters
+    String::AsciiValue name(property);
+    GNContext* ctx = ObjectWrap::Unwrap<GNContext>(info.This());
+    if (!ctx) {
+        ThrowException(Exception::Error(String::New("Context is invalid.")));
+    }
+    size_t s = 0;
+    bool found = false;
+    for (s = 0; s < NUM_SETTERS && !found; ++s) {
+        if (strcmp(SETTERS[s].opt_name, *name) == 0) {
+            SETTERS[s].setter(ctx->context_, opt);
+            found = true;
+            break;
+        }
+    }
+    if (!opt->IsNumber()) {
+        return;
+    }
+    for (s = 0; s < NUM_UINT8_SETTERS && !found; ++s) {
+        if (strcmp(UINT8_OPTION_SETTERS[s].opt_name, *name) == 0) {
+            found = true;
+            uint32_t optVal = opt->Uint32Value();
+            UINT8_OPTION_SETTERS[s].setter(ctx->context_, (uint8_t)optVal);
+        }
+    }
+    for (s = 0; s < NUM_UINT16_SETTERS && !found; ++s) {
+        if (strcmp(UINT16_OPTION_SETTERS[s].opt_name, *name) == 0) {
+            found = true;
+            uint32_t optVal = opt->Uint32Value();
+            UINT16_OPTION_SETTERS[s].setter(ctx->context_, (uint16_t)optVal);
+        }
+    }
+}
+
+void GNContext::InitProperties(Handle<Object> ctx) {
+    size_t s = 0;
+    for (s = 0; s < NUM_SETTERS; ++s) {
+        ctx->SetAccessor(String::New(SETTERS[s].opt_name),
+            GNContext::GetContextValue, GNContext::SetContextValue);
+    }
+    for (s = 0; s < NUM_UINT8_SETTERS; ++s) {
+        ctx->SetAccessor(String::New(UINT8_OPTION_SETTERS[s].opt_name),
+            GNContext::GetContextValue, GNContext::SetContextValue);
+    }
+    for (s = 0; s < NUM_UINT16_SETTERS; ++s) {
+        ctx->SetAccessor(String::New(UINT16_OPTION_SETTERS[s].opt_name),
+            GNContext::GetContextValue, GNContext::SetContextValue);
+
+    }
+}
 
 GNContext::GNContext() : context_(NULL) { }
 GNContext::~GNContext() {
@@ -230,47 +295,18 @@ GNContext::~GNContext() {
     context_ = NULL;
 }
 
-void GNContext::applyOptions(Handle<Value> optsV) {
+void GNContext::ApplyOptions(Handle<Object> self, Handle<Value> optsV) {
     if (!GNUtil::isDictionaryObject(optsV)) {
         return;
     }
     TryCatch try_catch;
     Local<Object> opts = optsV->ToObject();
     Local<Array> names = opts->GetOwnPropertyNames();
-    size_t s = 0;
-    // Walk the SETTERS array
+    // walk properties
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
-        bool found = false;
-        String::AsciiValue name(nameVal);
         Local<Value> opt = opts->Get(nameVal);
-        for (s = 0; s < NUM_SETTERS && !found; ++s) {
-            if (strcmp(SETTERS[s].opt_name, *name) == 0) {
-                SETTERS[s].setter(context_, opt);
-                found = true;
-                break;
-            }
-        }
-        for (s = 0; s < NUM_UINT8_SETTERS && !found; ++s) {
-            if (strcmp(UINT8_OPTION_SETTERS[s].opt_name, *name) == 0) {
-                found = true;
-                if (!opt->IsNumber()) {
-                    break;
-                }
-                uint32_t optVal = opt->Uint32Value();
-                UINT8_OPTION_SETTERS[s].setter(context_, (uint8_t)optVal);
-            }
-        }
-        for (s = 0; s < NUM_UINT16_SETTERS && !found; ++s) {
-            if (strcmp(UINT16_OPTION_SETTERS[s].opt_name, *name) == 0) {
-                found = true;
-                if (!opt->IsNumber()) {
-                    break;
-                }
-                uint32_t optVal = opt->Uint32Value();
-                UINT16_OPTION_SETTERS[s].setter(context_, (uint16_t)optVal);
-            }
-        }
+        self->Set(nameVal, opt);
         if (try_catch.HasCaught()) {
             try_catch.ReThrow();
             return;
@@ -328,18 +364,7 @@ Handle<Value> GNContext::New(const Arguments& args) {
             delete ctx;
             ThrowException(Exception::Error(String::New("Unable to create GNContext.")));
         }
-        // Apply options if needed
-        if (args.Length() > 0) {
-            // could throw an
-            TryCatch try_catch;
-            ctx->applyOptions(args[0]);
-            if (try_catch.HasCaught()) {
-                // Need to bail
-                delete ctx;
-                try_catch.ReThrow();
-                return scope.Close(Undefined());
-            }
-        }
+
         // Attach the context to node
         bool attached = GNUtil::attachContextToNode(ctx->context_);
         if (!attached) {
@@ -349,6 +374,20 @@ Handle<Value> GNContext::New(const Arguments& args) {
             return scope.Close(Undefined());
         }
         ctx->Wrap(args.This());
+        // add setters
+        GNContext::InitProperties(args.This());
+        // Apply options if needed
+        if (args.Length() > 0) {
+            // could throw an
+            TryCatch try_catch;
+            GNContext::ApplyOptions(args.This(), args[0]);
+            if (try_catch.HasCaught()) {
+                // Need to bail
+                delete ctx;
+                try_catch.ReThrow();
+                return scope.Close(Undefined());
+            }
+        }
         return args.This();
     } else {
         ThrowException(Exception::Error(String::New("Must use new.")));

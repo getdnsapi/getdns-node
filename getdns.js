@@ -45,5 +45,20 @@ module.exports.createContext = function(opts) {
         });
         return true;
     };
+    // add the wrappers for more consistent getdns API
+    ctx.general = function() {
+        return ctx.lookup.apply(ctx, arguments);
+    };
+    ctx.address = function() {
+        return ctx.getAddress.apply(ctx, arguments);
+    };
+    ctx.service = function() {
+        return ctx.getService.apply(ctx, arguments);
+    };
+    ctx.hostname = function() {
+        return ctx.getHostname.apply(ctx, arguments);
+    };
+
+
     return ctx;
 };

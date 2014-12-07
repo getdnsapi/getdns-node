@@ -105,6 +105,36 @@ describe("getdns test", function() {
                 finish(ctx, done);
             });
         });
+        it("should get valid results on address getdnsapi.net", function(done) {
+            var ctx = getdns.createContext({"stub" : true});
+            ctx.address("getdnsapi.net", function(e, result) {
+                expect(e).to.not.be.ok(e);
+                expect(result).to.be.ok();
+                expect(result.just_address_answers).to.be.an(Array);
+                expect(result.just_address_answers).to.not.be.empty();
+                finish(ctx, done);
+            });
+        });
+        it("should get valid results on service getdnsapi.net", function(done) {
+            var ctx = getdns.createContext({"stub" : true});
+            ctx.service("getdnsapi.net", function(e, result) {
+                expect(e).to.not.be.ok(e);
+                expect(result).to.be.ok();
+                expect(result.replies_full).to.be.an(Array);
+                expect(result.replies_full).to.not.be.empty();
+                finish(ctx, done);
+            });
+        });
+        it("should get valid results on hostname 8.8.8.8", function(done) {
+            var ctx = getdns.createContext({"stub" : true});
+            ctx.hostname("8.8.8.8", function(e, result) {
+                expect(e).to.not.be.ok(e);
+                expect(result).to.be.ok();
+                expect(result.replies_full).to.be.an(Array);
+                expect(result.replies_full).to.not.be.empty();
+                finish(ctx, done);
+            });
+        });
         it("should issue concurrent queries", function(done) {
             var ctx = getdns.createContext({"stub" : true});
             var hosts = ["getdnsapi.net", "labs.verisigninc.com", "nlnetlabs.nl"];
@@ -132,6 +162,18 @@ describe("getdns test", function() {
                 expect(result).to.not.be.ok();
                 expect(err).to.have.property('msg');
                 expect(err).to.have.property('code');
+                finish(ctx, done);
+            });
+        });
+        it("should not timeout", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "timeout" : 1
+            });
+            ctx.timeout = 10000;
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok(err);
+                expect(result).to.be.ok();
                 finish(ctx, done);
             });
         });

@@ -22,7 +22,6 @@ var callback = function(err, result) {
     // A third argument is also supplied as the transaction id
     // See below for the format of response
     // when done with a context, it must be explicitly destroyed
-    context.destroy();
 };
 
 // create the context with the above options
@@ -31,16 +30,20 @@ var context = getdns.createContext(options);
 // getdns general
 // third argument may be a dictionary for extensions
 // last argument must be a callback
-var transactionId = context.lookup("getdnsapi.net", getdns.RRTYPE_A, callback);
+var transactionId = context.general("getdnsapi.net", getdns.RRTYPE_A, callback);
 
 // cancel a request
 // context.cancel(transactionId);
 
 // other methods, TODO: dont destroy context in callback to reuse
-//context.getAddress("getdnsapi.net", callback);
-//context.getService("getdnsapi.net", callback);
-//context.getHostname("8.8.8.8", callback);
+context.address("getdnsapi.net", callback);
+context.service("getdnsapi.net", callback);
+context.hostname("8.8.8.8", callback);
 
 // extensions are passed as dictionaries
 // where the value for on / off are normal bools
 //context.getAddress("cnn.com", { return_both_v4_and_v6 : true }, callback);
+
+process.on('exit', function() {
+    context.destroy();
+});

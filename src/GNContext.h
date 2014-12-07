@@ -42,7 +42,8 @@ private:
     ~GNContext();
 
     // set options on the context
-    void applyOptions(v8::Handle<v8::Value> opts);
+    static void ApplyOptions(v8::Handle<v8::Object> self,
+                             v8::Handle<v8::Value> opts);
 
     // JS Functions
     static v8::Handle<v8::Value> New(const v8::Arguments& args);
@@ -50,6 +51,11 @@ private:
     static v8::Handle<v8::Value> Lookup(const v8::Arguments& args);
     static v8::Handle<v8::Value> HelperLookup(const v8::Arguments& args);
     static v8::Handle<v8::Value> Cancel(const v8::Arguments& args);
+
+    static void InitProperties(v8::Handle<v8::Object> self);
+    static v8::Handle<v8::Value> GetContextValue(v8::Local<v8::String> property, const v8::AccessorInfo& info);
+    static void SetContextValue(v8::Local<v8::String> property, v8::Local<v8::Value> value,
+                                const v8::AccessorInfo& info);
 
     // Getdns Callback
     static void Callback(getdns_context *this_context,

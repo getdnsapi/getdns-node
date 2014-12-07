@@ -57,16 +57,37 @@ var transactionId = context.lookup("getdnsapi.net", getdns.RRTYPE_A, callback);
 context.cancel(transactionId);
 
 // other methods
-context.getAddress("getdnsapi.net", callback);
-context.getService("getdnsapi.net", callback);
-context.getHostname("8.8.8.8", callback);
+context.address("getdnsapi.net", callback);
+context.service("getdnsapi.net", callback);
+context.hostname("8.8.8.8", callback);
 
 // extensions are passed as dictionaries
 // where the value for on / off are normal bools
-context.getAddress("getdnsapi.net", { return_both_v4_and_v6 : true }, callback);
+context.address("getdnsapi.net", { return_both_v4_and_v6 : true }, callback);
 
 // when done with a context, it must be explicitly destroyed
 context.destroy();
+
+// Setting context properties
+// Context objects support setting properties via similar to the C API.
+// getdns_context_set_timeout(context, 1000) would map to:
+// context.timeout = 1000
+// The following properties are available to set directly and can also
+// be set in the options object passed to the constructor.
+
+// context.resolution_type
+// context.upstream_recursive_servers - use an array of IP Addresses
+// context.timeout
+// context.use_threads
+// context.return_dnssec_status
+// context.dns_transport
+// context.edns_extended_rcode
+// context.edns_version
+// context.edns_do_bit
+// context.limit_outstanding_queries
+// context.edns_maximum_udp_payloadSize
+
+// For backwards compatibility, context.stub and context.upstreams are still supported.
 
 ```
 
