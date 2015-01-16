@@ -2,9 +2,9 @@ language: node_js
 before_install:
   - sudo apt-get update
   - sudo apt-get install libunbound-dev libldns-dev libidn11-dev check libevent-dev unbound-anchor
-  - curl -O http://getdnsapi.net/dist/getdns-0.1.5.tar.gz
-  - tar -xf getdns-0.1.5.tar.gz
-  - cd getdns-0.1.5
+  - curl -O http://getdnsapi.net/dist/getdns-0.1.6.tar.gz
+  - tar -xf getdns-0.1.6.tar.gz
+  - cd getdns-0.1.6
   - ./configure
   - make
   - sudo make install
