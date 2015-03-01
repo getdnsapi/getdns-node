@@ -29,6 +29,7 @@
 #define _GNCONTEXT_H_
 
 #include <node.h>
+#include <nan.h>
 #include <getdns/getdns.h>
 
 // Getdns Context wrapper for Node
@@ -46,16 +47,15 @@ private:
                              v8::Handle<v8::Value> opts);
 
     // JS Functions
-    static v8::Handle<v8::Value> New(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Destroy(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Lookup(const v8::Arguments& args);
-    static v8::Handle<v8::Value> HelperLookup(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Cancel(const v8::Arguments& args);
+    static NAN_METHOD(New);
+    static NAN_METHOD(Destroy);
+    static NAN_METHOD(Lookup);
+    static NAN_METHOD(HelperLookup);
+    static NAN_METHOD(Cancel);
 
     static void InitProperties(v8::Handle<v8::Object> self);
-    static v8::Handle<v8::Value> GetContextValue(v8::Local<v8::String> property, const v8::AccessorInfo& info);
-    static void SetContextValue(v8::Local<v8::String> property, v8::Local<v8::Value> value,
-                                const v8::AccessorInfo& info);
+    static NAN_GETTER(GetContextValue);
+    static NAN_SETTER(SetContextValue);
 
     // Getdns Callback
     static void Callback(getdns_context *this_context,

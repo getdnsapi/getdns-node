@@ -1,27 +1,31 @@
 {
-    "name" : "getdns",
-    "version" : "0.1.6",
-    "description" : "getdns bindings for Node.js.  Requires getdns 0.1.6 or above.",
-    "main" : "getdns.js",
-    "keywords" : ["dns", "getdns"],
-    "gypfile" : true,
-    "author" : {
-        "name" : "Neel Goyal"
-    },
-    "repository" : {
-        "type" : "git",
-        "url" : "https://github.com/getdnsapi/getdns-node.git"
-    },
-    "dependencies" : {
-        "bindings" : "*"
-    },
-    "devDependencies": {
-        "mocha": "*",
-        "expect.js" : "*",
-        "async" : "*"
-    },
-    "scripts": {
-        "preinstall": "node-gyp clean rebuild",
-        "test": "./node_modules/.bin/mocha"
-    }
+  "name": "getdns",
+  "version": "0.1.6",
+  "description": "getdns bindings for Node.js.  Requires getdns 0.1.6 or above.",
+  "main": "getdns.js",
+  "keywords": [
+    "dns",
+    "getdns"
+  ],
+  "gypfile": true,
+  "author": {
+    "name": "Neel Goyal"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/getdnsapi/getdns-node.git"
+  },
+  "dependencies": {
+    "bindings": "*",
+    "nan": "^1.7.0"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "expect.js": "*",
+    "async": "*"
+  },
+  "scripts": {
+    "preinstall": "node-gyp clean rebuild",
+    "test": "./node_modules/.bin/mocha"
+  }
 }

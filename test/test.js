@@ -165,6 +165,7 @@ describe("getdns test", function() {
                 finish(ctx, done);
             });
         });
+
         it("should not timeout", function(done) {
             var ctx = getdns.createContext({
                 "stub" : true,

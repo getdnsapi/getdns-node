@@ -12,6 +12,9 @@
                     "-lgetdns", "-lldns"
                 ]
             },
+            "include_dirs" : [
+                "<!(node -e \"require('nan')\")"
+            ],
             "conditions": [
                 ["OS=='mac' or OS=='solaris'", {
                   "xcode_settings": {

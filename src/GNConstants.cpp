@@ -27,17 +27,18 @@
 
 #include "GNConstants.h"
 #include <getdns/getdns.h>
+#include <nan.h>
 
 using namespace v8;
 
 static inline void SetConstant(const char* name, int value, Handle<Object> exports) {
-    exports->Set(String::NewSymbol(name), Integer::New(value), ReadOnly);
+    exports->ForceSet(NanNew<String>(name), NanNew<Integer>(value), ReadOnly);
 }
 
 void GNConstants::Init(Handle<Object> target) {
 
-    Persistent<Object> exports = Persistent<Object>::New(Object::New());
-    target->Set(String::NewSymbol("constants"), exports);
+    Local<Object> exports = NanNew<Object>();
+    target->ForceSet(NanNew<String>("constants"), exports, ReadOnly);
 
     SetConstant("RETURN_GOOD",GETDNS_RETURN_GOOD,exports);
     SetConstant("RETURN_GENERIC_ERROR",GETDNS_RETURN_GENERIC_ERROR,exports);
@@ -199,4 +200,3 @@ void GNConstants::Init(Handle<Object> target) {
     SetConstant("RCODE_BADALG",GETDNS_RCODE_BADALG,exports);
     SetConstant("RCODE_BADTRUNC",GETDNS_RCODE_BADTRUNC,exports);
 }
-

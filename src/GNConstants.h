@@ -31,7 +31,7 @@
 #include <node.h>
 
 // Getdns Context wrapper for Node
-class GNConstants : public node::ObjectWrap {
+class GNConstants {
 public:
     // Node module initializer
     static void Init(v8::Handle<v8::Object> exports);

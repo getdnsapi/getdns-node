@@ -40,7 +40,7 @@ module.exports.createContext = function(opts) {
             return false;
         }
         destroyed = true;
-        process.nextTick(function() {
+        setImmediate(function() {
             oldDestroyFunc.call(ctx);
         });
         return true;
