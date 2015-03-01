@@ -1,6 +1,6 @@
 {
   "name": "getdns",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "getdns bindings for Node.js.  Requires getdns 0.1.6 or above.",
   "main": "getdns.js",
   "keywords": [
@@ -25,7 +25,7 @@
     "async": "*"
   },
   "scripts": {
-    "preinstall": "node-gyp clean rebuild",
+    "postinstall": "node-gyp clean rebuild",
     "test": "./node_modules/.bin/mocha"
   }
 }

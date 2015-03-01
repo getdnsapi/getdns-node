@@ -236,6 +236,7 @@ static size_t NUM_UINT16_SETTERS = sizeof(UINT16_OPTION_SETTERS) / sizeof(Uint16
 // End setters
 NAN_GETTER(GNContext::GetContextValue) {
     // context has no getters yet
+    NanScope();
     NanReturnValue(NanNew<Integer>(-1));
 }
 NAN_SETTER(GNContext::SetContextValue) {
