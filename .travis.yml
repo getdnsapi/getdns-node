@@ -14,3 +14,5 @@ before_install:
   - sudo unbound-anchor -v -a "/etc/unbound/getdns-root.key" || [ -f /etc/unbound/getdns-root.key ]
 node_js:
   - "0.10"
+  - "0.12"
+  - iojs
