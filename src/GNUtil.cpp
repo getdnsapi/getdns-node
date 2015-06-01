@@ -269,7 +269,7 @@ static Handle<Value> convertBinData(getdns_bindata* data,
     }
     // basic string?
     if (printable) {
-        return NanNew<String>((char*) data->data);
+        return NanNew<String>( (char*) data->data, data->size );
     // the root
     } else if (data->size == 1 && data->data[0] == 0) {
         return NanNew<String>(".");
