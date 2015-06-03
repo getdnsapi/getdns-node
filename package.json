@@ -16,13 +16,13 @@
     "url": "https://github.com/getdnsapi/getdns-node.git"
   },
   "dependencies": {
-    "bindings": "*",
-    "nan": "^1.7.0"
+    "bindings": "^1.2.1",
+    "nan": "^1.8.0"
   },
   "devDependencies": {
-    "mocha": "*",
-    "expect.js": "*",
-    "async": "*"
+    "mocha": "^2.2.5",
+    "expect.js": "^0.3.1",
+    "async": "^1.2.0"
   },
   "scripts": {
     "postinstall": "node-gyp clean rebuild",

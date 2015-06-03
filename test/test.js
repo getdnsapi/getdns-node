@@ -214,9 +214,13 @@ describe("getdns test", function() {
 
     describe("DNSSEC", function() {
         it("should return with dnssec_status", function(done) {
+            this.timeout(10000);
             var ctx = getdns.createContext({
                 "stub" : true,
-                "return_dnssec_status" : true
+                "return_dnssec_status" : true,
+                "upstreams" : [
+                    "8.8.8.8"
+                ]
             });
             ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.not.be.ok();

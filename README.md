@@ -268,3 +268,8 @@ Mocha is used to test the bindings.
 - npm install -g mocha
 - mocha
 
+Note that the tests require an Internet connection and a trust anchor to be installed to pass.  Please consult the getdns documentation on the expected location of the trust anchor.  Common locations are:
+
+- /etc/unbound/getdns-root.key
+- ${prefix}/etc/unbound/getdns-root.key
+- ${prefix}/etc/getdns-root.key
