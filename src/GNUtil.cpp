@@ -31,7 +31,6 @@
 #include <nan.h>
 #include <node.h>
 #include <node_buffer.h>
-#include <string_bytes.h>
 #include "GNUtil.h"
 
 #include <ctype.h>

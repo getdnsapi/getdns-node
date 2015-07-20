@@ -115,6 +115,40 @@ static void setTransport(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setTransportList(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsArray()) {
+        Handle<Array> transportList = Handle<Array>::Cast(opt);
+        uint32_t numTransports = transportList->Length();
+        // create a getdns_transport_list_t*
+        getdns_transport_list_t* transports = new getdns_transport_list_t[numTransports];
+        for (uint32_t i = 0; i < numTransports; ++i) {
+            uint32_t transport = transportList->Get(i)->Uint32Value();
+            transports[i] = (getdns_transport_list_t) transport;
+        }
+        // set it
+        getdns_context_set_dns_transport_list(context, numTransports, transports);
+        // free up memory
+        delete[] transports;
+    }
+}
+
+static void setNamespaceList(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsArray()) {
+        Handle<Array> namespaceList = Handle<Array>::Cast(opt);
+        uint32_t numNamespaces = namespaceList->Length();
+        // create a getdns_namespace_list_t*
+        getdns_namespace_t* namespaces = new getdns_namespace_t[numNamespaces];
+        for (uint32_t i = 0; i < numNamespaces; ++i) {
+            uint32_t ns = namespaceList->Get(i)->Uint32Value();
+            namespaces[i] = (getdns_namespace_t) ns;
+        }
+        // set it
+        getdns_context_set_namespaces(context, numNamespaces, namespaces);
+        // free up memory
+        delete[] namespaces;
+    }
+}
+
 static void setStub(getdns_context* context, Handle<Value> opt) {
     if (opt->IsTrue()) {
         getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
@@ -203,7 +237,9 @@ static OptionSetter SETTERS[] = {
     { "use_threads", setUseThreads },
     { "return_dnssec_status", setReturnDnssecStatus },
     { "dns_transport", setTransport},
-    { "resolution_type", setResolutionType }
+    { "resolution_type", setResolutionType },
+    { "namespaces", setNamespaceList },
+    { "dns_transport_list", setTransportList }
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);

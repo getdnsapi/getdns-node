@@ -9,7 +9,7 @@ Node.js bindings for the [getdnsapi](http://getdnsapi.net) implementation of [ge
 Installation and Requirements
 =============================
 
-- An installation of getdns 0.1.5 or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
+- An installation of getdns 0.3.1 or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
 - `npm install getdns`
 
 Or to build from source:
@@ -86,6 +86,8 @@ context.destroy();
 // context.edns_do_bit
 // context.limit_outstanding_queries
 // context.edns_maximum_udp_payloadSize
+// context.namespaces
+// context.dns_transport_list
 
 // For backwards compatibility, context.stub and context.upstreams are still supported.
 
