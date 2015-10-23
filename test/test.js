@@ -70,7 +70,8 @@ describe("getdns test", function() {
                 expect(result.just_address_answers).to.be.an(Array);
                 expect(result.just_address_answers).to.not.be.empty();
                 result.just_address_answers.map(function(r) {
-                    expect(r).to.be.an('string');
+                     expect(r.address_type).to.be.an('string');
+                     expect(r.address_data).to.be.an(Buffer);
                 });
                 finish(ctx, done);
             });
