@@ -1,7 +1,7 @@
 {
   "name": "getdns",
-  "version": "0.3.1",
-  "description": "getdns bindings for Node.js.  Requires getdns 0.3.1 or above.",
+  "version": "0.5.0",
+  "description": "getdns bindings for Node.js.  Requires getdns 0.5.0 or above.",
   "main": "getdns.js",
   "keywords": [
     "dns",
