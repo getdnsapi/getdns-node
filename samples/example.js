@@ -5,6 +5,9 @@ var getdns = require('getdns');
 var options = {
     // request timeout time in millis
     timeout : 5000,
+    "upstreams" : [
+        "8.8.8.8"
+    ],
     // always return dnssec status
     return_dnssec_status : true
 };

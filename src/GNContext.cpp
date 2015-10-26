@@ -115,6 +115,13 @@ static void setTransport(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setTlsAuthentication(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_tls_authentication(context, (getdns_tls_authentication_t) num);
+    }
+}
+
 static void setTransportList(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         Handle<Array> transportList = Handle<Array>::Cast(opt);
@@ -237,6 +244,7 @@ static OptionSetter SETTERS[] = {
     { "use_threads", setUseThreads },
     { "return_dnssec_status", setReturnDnssecStatus },
     { "dns_transport", setTransport},
+    { "tls_authentication", setTlsAuthentication},
     { "resolution_type", setResolutionType },
     { "namespaces", setNamespaceList },
     { "dns_transport_list", setTransportList }

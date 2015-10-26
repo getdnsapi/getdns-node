@@ -223,6 +223,7 @@ describe("getdns test", function() {
                     "8.8.8.8"
                 ]
             });
+
             ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
@@ -232,12 +233,32 @@ describe("getdns test", function() {
                 });
                 finish(ctx, done);
             });
+         });
+
+         it("should return with dnssec_status getdns.DNSSEC_SECURE when in stub mode fallback", function(done) {
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "64.6.64.6"
+                ]
+            });
+	    ctx.dns_transport = getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP;
+            ctx.getAddress("getdnsapi.net", function(err, result) {
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
         });
 
         it("should return with dnssec_status getdns.DNSSEC_SECURE when not in stub mode", function(done) {
             var ctx = getdns.createContext({
                 "stub" : false,
-                "return_dnssec_status" : true
+                "return_dnssec_status" : true,
+                "upstreams" : [
+                    "64.6.64.6"
+                ]
             });
             ctx.getAddress("getdnsapi.net", function(err, result) {
                 expect(err).to.not.be.ok();
@@ -246,6 +267,88 @@ describe("getdns test", function() {
                 });
                 finish(ctx, done);
             });
+        });
+    });
+
+    describe("TLS", function() {
+        it("TLS should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "185.49.141.38"
+                ]
+            });
+	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+            //ctx.address("getdnsapi.net", function(err, result) {
+            ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
+        });
+    });
+
+
+
+    describe("TLS_vlabs", function() {
+        it("TLS only should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "173.255.254.151"
+                ]
+            });
+	    ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
+        });
+        it("TLS tls fallback tcp should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "173.255.254.151"
+                ]
+            });
+	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
+        });
+        it("TLS starttls first should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "173.255.254.151"
+                ]
+            });
+            // todo debug ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+	    ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
         });
     });
 
