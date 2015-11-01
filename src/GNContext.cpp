@@ -180,6 +180,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
             getdns_dict* ipDict = NULL;
             if (ipOrTuple->IsArray()) {
                 // two tuple - first is IP, 2nd is port
+                // optional tuple - TLS Hostname
                 Handle<Array> tuple = Handle<Array>::Cast(ipOrTuple);
                 if (tuple->Length() > 0) {
                     NanUtf8String asciiStr(tuple->Get(0)->ToString());
@@ -189,6 +190,10 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                         // port
                         uint32_t port = tuple->Get(1)->Uint32Value();
                         getdns_dict_set_int(ipDict, "port", port);
+                        // TLS hostname (TODO: fix to allow this if optional port is not set
+                        NanUtf8String asciiTlsHostnameStr(tuple->Get(2)->ToString());
+			//printf("tls auth name = %s\n", *asciiTlsHostnameStr);
+                        getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiTlsHostnameStr);
                     }
                 }
             } else {
