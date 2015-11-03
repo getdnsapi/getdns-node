@@ -9,7 +9,7 @@
             ],
             "link_settings" : {
                 "libraries" : [
-                    "-lgetdns", "-lldns"
+                    "-lgetdns"
                 ]
             },
             "include_dirs" : [
