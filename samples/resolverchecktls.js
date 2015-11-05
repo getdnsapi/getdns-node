@@ -14,8 +14,9 @@ var app = module.exports = express();
 // getdns includes. set LD_LIBRARY_PATH to /usr/local/lib
 var getdns = require('../getdns');
 
-var res1 = "";
 
+var res1 = "";
+var resfinal = "";
 var options = {
     // request timeout time in millis
     timeout : 10000,
@@ -23,32 +24,34 @@ var options = {
     // upstream recursive servers.. overriden in command line
     upstreams : [
      ["64.6.64.6"]
-//     ["185.49.141.38",853,"www.dnssec-name-and-shame.com"]
+//     ["185.49.141.38",853,"www.getdnsapi.net"]
     ],
     // return dnssec status false for this test
     return_dnssec_status : false,
     };
 
+app.get('/resolverinfo/', function(req, res) {
+
+   res1 = "";
 
    var resolver, query;
    var hostname = "<null>"; 
-   process.argv.forEach(function (val, index, array) {
-     console.log(index + ': ' + val);
-     if (index == 2) resolver = val;
-     if (index == 3) query = val;
-     if (index == 4) hostname = val;
-   });
-   process.stdout.write("resolver = " + resolver +  "\n");
-   process.stdout.write("query = " + query  + "\n");
-   process.stdout.write("hostname = " + hostname +  "\n");
+ 
+   resolver = req.query.resolver;
+   hostname = req.query.hostname; 
+   query = req.query.query;
+   process.stdout.write("resolver = " + req.query.resolver +  "\n");
+   process.stdout.write("query = " + req.query.query  + "\n");
+   process.stdout.write("hostname = " + req.query.hostname +  "\n");
 
-    porttls = 853;
-    var upstreamresolvers = [];
-    upstreamresolvers.push(resolver);
-    upstreamresolvers.push(porttls);
-    upstreamresolvers.push(hostname);
-    var up1 = [];
-    up1.push(upstreamresolvers);
+
+   porttls = 853;
+   var upstreamresolvers = [];
+   upstreamresolvers.push(req.query.resolver);
+   upstreamresolvers.push(porttls);
+   upstreamresolvers.push(req.query.hostname);
+   var up1 = [];
+   up1.push(upstreamresolvers);
 
 //  create the contexts we need to test with the above options
     var context = getdns.createContext(options);
@@ -97,37 +100,33 @@ var options = {
 	     res1 += "<p><b><img src=\"http://homepages.xnet.co.nz/_default/stuff/img/img_www_no.png\" height=\"20\" width=\"20\"/>     No TCP, no TLS!</b></p>";
            } else if (result.status == 900) {  // TCP worked
               process.stdout.write("In callback TCP fallback worked " + JSON.stringify(result.replies_tree) + "\n");
-	      res1 += "<p><b><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/>    Connected through fallback to TCP!</b></p>";
-              app.get('/', function(req, res){
-               res.send(res1);
-            });
+	      res1 += "<p><b><img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" />    Connected through fallback to TCP!</b></p>";
+             resfinal = res1;
+             res.send(resfinal);
          }
        });
        } else if (result.status == 900) {
-	    res1 += "<p><b><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/>    TLS without authentication succeeds! </b></p>";
+	    res1 += "<p><b><img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" /><img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" />     TLS without authentication succeeds! </b></p>";
             process.stdout.write("In callback TLS " + JSON.stringify(result.replies_tree) + "\n");
-            app.get('/', function(req, res){
-             res.send(res1);
-            });
+             resfinal = res1;
+             res.send(resfinal);
         } else { // try fallback to tcp
            context1.destroy();
            context2.general(query, getdns.RRTYPE_A, function(err, result) {
            if (err != null) {
              process.stdout.write("Error2 = " + JSON.stringify(err));
            } else if (result.status == 900) {
-	      res1 += "<p><b><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/>    Connected through fallback to TCP! <b></p>";
-              app.get('/', function(req, res){
-               res.send(res1);
-            });
+	      res1 += "<p><b><img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" />    Connected through fallback to TCP! <b></p>";
+	      resfinal = res1;
+	      res.send(resfinal);
          }
        });
       }
       });
       } else if  (result.status == 900) { // TLS auth worked
-	    res1 += "<p><b><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/><img src=\"http://sweetclipart.com/multisite/sweetclipart/files/check_mark_green.png\" height=\"20\" width=\"20\"/>     Result:  TLS with hostname authentication succeeds!</b></p>";
-            app.get('/', function(req, res){
-             res.send(res1);
-            });
+	    res1 += "<p><b><img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" /> <img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" /> <img src=\"http://www.clipartbest.com/cliparts/LiK/dMx/LiKdMx56T.png\" height=\"60\" width=\"60\" />     Result:  TLS with hostname authentication succeeds!</b></p>";
+             resfinal = res1;
+             res.send(resfinal);
       } 
       
     });
@@ -135,9 +134,7 @@ var options = {
     res1 += "<p>Note: This webpage is created with node.js bindings of getdns, in the expressjs framework</p>";
     res1 += "<p>Source code will be available at <a href=\"https://github.com/getdnsapi/checkresolvertls\">https://github.com/getdnsapi/checkresolvertls</a></p>";
 
-    app.get('/', function(req, res){
-        res.send(res1);
-        });
+});
 
 if (!module.parent) {
   app.listen(50000);
