@@ -81,7 +81,7 @@ app.get('/resolverinfo/', function(req, res) {
     
     res1 += "<h1>Check TLS at Recursive</h1>";
     res1 += "<h2>Target Resolver: " + resolver + "</h2>";
-    res1 += "<h2>Recursive’s Hostname in Certificate:" + hostname + "</h2>";
+    res1 += "<h2>Recursive’s Hostname in Certificate: " + hostname + "</h2>";
     res1 += "<h2>Checking for:</h2>";
     res1 += "<h3>1. Successful TCP connection</h3>";
     res1 += "<h3>2. Successful TLS connection</h3>";
