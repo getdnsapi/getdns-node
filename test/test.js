@@ -289,9 +289,44 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
             }); 
-        });
+      });
     });
 
+    describe("TLSHostname", function() {
+        it("TLS hostname validation should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "return_call_reporting" : true,
+                "upstreams" : [
+                    "185.49.141.38"// , 853, "getdnsapi.net"
+                ]
+            });
+
+        porttls = 853;
+        var upstreamresolvers = [];
+        upstreamresolvers.push("185.49.141.38");
+        upstreamresolvers.push(porttls);
+        upstreamresolvers.push("getdnsapi.net");
+        var up1 = [];
+        up1.push(upstreamresolvers);
+
+// create the contexts we need to test with the above options
+        ctx.upstream_recursive_servers = up1;
+
+
+        ctx.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
+        ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+                console.log(JSON.stringify(result.replies_tree, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            });
+        });
+    });
 
 
     describe("TLS_vlabs", function() {
@@ -352,4 +387,33 @@ describe("getdns test", function() {
         });
     });
 
+    describe("TSIG", function() {
+        it("TSIG should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "185.49.141.37" // , 853 , "^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ=="
+                ]
+            });
+        port = 53;
+        var upstreamresolvers = [];
+        upstreamresolvers.push("185.49.141.37");
+        upstreamresolvers.push(port);
+        upstreamresolvers.push("^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==");
+        var up1 = [];
+        up1.push(upstreamresolvers);
+// create the contexts we need to test with the above options
+        ctx.upstream_recursive_servers = up1;
+            ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting" : true}, function(err, result) {
+                console.log(JSON.stringify(result, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            }); 
+        });
+    });
 });
+

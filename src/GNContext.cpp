@@ -171,6 +171,106 @@ static void setResolutionType(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+int gqldns_b64_pton(char const *src, uint8_t *target, size_t targsize)
+{
+        const uint8_t pad64 = 64; /* is 64th in the b64 array */
+        const char* s = src;
+        uint8_t in[4];
+        size_t o = 0, incount = 0;
+
+        while(*s) {
+                /* skip any character that is not base64 */
+                /* conceptually we do:
+                const char* b64 =      pad'=' is appended to array
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+                const char* d = strchr(b64, *s++);
+                and use d-b64;
+                */
+                char d = *s++;
+                if(d <= 'Z' && d >= 'A')
+                        d -= 'A';
+                else if(d <= 'z' && d >= 'a')
+                        d = d - 'a' + 26;
+                else if(d <= '9' && d >= '0')
+                        d = d - '0' + 52;
+                else if(d == '+')
+                        d = 62;
+                else if(d == '/')
+                        d = 63;
+                else if(d == '=')
+                        d = 64;
+                else    continue;
+                in[incount++] = (uint8_t)d;
+                if(incount != 4)
+                        continue;
+
+                /* process whole block of 4 characters into 3 output bytes */
+                if(in[3] == pad64 && in[2] == pad64) { /* A B = = */
+                        if(o+1 > targsize)
+                                return -1;
+                        target[o] = (in[0]<<2) | ((in[1]&0x30)>>4);
+                        o += 1;
+                        break; /* we are done */
+                } else if(in[3] == pad64) { /* A B C = */
+                        if(o+2 > targsize)
+                                return -1;
+                        target[o] = (in[0]<<2) | ((in[1]&0x30)>>4);
+                        target[o+1]= ((in[1]&0x0f)<<4) | ((in[2]&0x3c)>>2);
+                        o += 2;
+                        break; /* we are done */
+                } else {
+                        if(o+3 > targsize)
+                                return -1;
+                        /* write xxxxxxyy yyyyzzzz zzwwwwww */
+                        target[o] = (in[0]<<2) | ((in[1]&0x30)>>4);
+                        target[o+1]= ((in[1]&0x0f)<<4) | ((in[2]&0x3c)>>2);
+                        target[o+2]= ((in[2]&0x03)<<6) | in[3];
+                        o += 3;
+                }
+                incount = 0;
+        }
+        return (int)o;
+}
+
+// parse string in format ^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==
+// to get the TSIG name and secret
+
+void tsigHelper(getdns_dict *ipDict, char *buf) {
+    char *tsig_name_str = ""
+         , *tsig_secret_str = ""
+         , *tsig_algorithm_str = "";
+    int            tsig_secret_size;
+    uint8_t        tsig_secret_buf[256]; /* 4 times SHA512 */
+    getdns_bindata tsig_secret;
+
+    tsig_name_str = &buf[1];
+    if ((buf = strchr(tsig_name_str, ':'))) {
+        *buf = 0;
+        tsig_secret_str = buf + 1;
+        if ((buf = strchr(tsig_secret_str, ':'))) {
+            *buf = 0;
+            tsig_algorithm_str  = tsig_name_str;
+            tsig_name_str = tsig_secret_str;
+            tsig_secret_str  = buf + 1;
+        }
+     } else {
+         tsig_name_str = "";
+    }
+    if (*tsig_name_str)
+        getdns_dict_util_set_string(ipDict, "tsig_name", tsig_name_str);
+    if (*tsig_algorithm_str)
+        getdns_dict_util_set_string(ipDict, "tsig_algorithm", tsig_algorithm_str);
+    if (*tsig_secret_str) {
+        tsig_secret_size = gqldns_b64_pton(
+            tsig_secret_str, tsig_secret_buf, sizeof(tsig_secret_buf));
+            if (tsig_secret_size > 0) {
+                tsig_secret.size = tsig_secret_size;
+                tsig_secret.data = tsig_secret_buf;
+                getdns_dict_set_bindata(ipDict, "tsig_secret", &tsig_secret);
+            }
+    }
+}
+
 static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
@@ -181,6 +281,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
             if (ipOrTuple->IsArray()) {
                 // two tuple - first is IP, 2nd is port
                 // optional tuple - TLS Hostname
+                // optional tuple - TSIG name:algorithm:secret
                 Handle<Array> tuple = Handle<Array>::Cast(ipOrTuple);
                 if (tuple->Length() > 0) {
                     NanUtf8String asciiStr(tuple->Get(0)->ToString());
@@ -190,15 +291,23 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                         // port
                         uint32_t port = tuple->Get(1)->Uint32Value();
                         getdns_dict_set_int(ipDict, "port", port);
-                        // TLS hostname (TODO: fix to allow this if optional port is not set
-                        NanUtf8String asciiTlsHostnameStr(tuple->Get(2)->ToString());
-			//printf("tls auth name = %s\n", *asciiTlsHostnameStr);
-                        getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiTlsHostnameStr);
+                        // TLS hostname or TSIG (TODO: fix to allow this if optional port is not set)
+                        NanUtf8String asciiBuffer(tuple->Get(2)->ToString());
+ 
+                        if (((char *)*asciiBuffer)[0] != '^') { // not tsig 
+                            getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiBuffer);
+                        }
+                        else {
+                            tsigHelper(ipDict, *asciiBuffer);
+                       }
                     }
                 }
             } else {
                 NanUtf8String asciiStr(ipOrTuple->ToString());
-                ipDict = getdns_util_create_ip(*asciiStr);
+                if (((char *)*asciiStr)[0] == '^') { // tsig 
+                            tsigHelper(ipDict, *asciiStr);
+                }
+                else ipDict = getdns_util_create_ip(*asciiStr);
             }
             if (ipDict) {
                 size_t len = 0;
@@ -234,6 +343,7 @@ static void setReturnDnssecStatus(getdns_context* context, Handle<Value> opt) {
     int val = opt->IsTrue() ? GETDNS_EXTENSION_TRUE : GETDNS_EXTENSION_FALSE;
     getdns_context_set_return_dnssec_status(context, val);
 }
+
 
 typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
 typedef struct OptionSetter {

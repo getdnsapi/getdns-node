@@ -5,6 +5,10 @@
 // Install from http://expressjs.com/ and follow instructions to setup in the Readme
 //
 //
+// Run from browser using the following example url: 
+// http://localhost:50000/resolverinfo?resolver=185.49.141.38&query=getdnsapi.net&hostname=getdnsapi.net
+
+
 // Replace the relative paths with your own path for the install of expressjs
 var express = require('express');
 var app = module.exports = express();
@@ -58,7 +62,7 @@ app.get('/resolverinfo/', function(req, res) {
     context.upstream_recursive_servers = up1;
     context.timeout = 10000;
     context.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
-    context.upstream_recursive_servers = resolver;
+   //g context.upstream_recursive_servers = resolver;
     context.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
     
     var context1 = getdns.createContext(options);
