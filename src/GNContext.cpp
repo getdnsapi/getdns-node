@@ -271,6 +271,33 @@ void tsigHelper(getdns_dict *ipDict, char *buf) {
     }
 }
 
+// eg:  getdnsapi.net,com for www.verisignlabs
+// Will first try to get the addresses for
+// www.verisignlabs.getdnsapi.net and will then try and return the
+// successfull lookup of the addresses for www.verisignlabs.com.
+static void setSuffixes(getdns_context* context, char* buf) {
+
+    getdns_list *suffixes;
+    char *suffix;
+    getdns_bindata bindata;
+    size_t j;
+
+    if (!(suffixes = getdns_list_create()))
+        return;  // TODO handle memory errors
+    suffix = strtok(&buf[1], ",");
+        j = 0;
+        while (suffix) {
+            bindata.size = strlen(suffix);
+            bindata.data = (uint8_t *)suffix;
+            (void) getdns_list_set_bindata(
+                suffixes, j++, &bindata);
+            suffix = strtok(NULL, ",");
+       }
+       (void) getdns_context_set_suffix(context,
+           suffixes);
+       getdns_list_destroy(suffixes);
+}
+
 static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
@@ -282,6 +309,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                 // two tuple - first is IP, 2nd is port
                 // optional tuple - TLS Hostname
                 // optional tuple - TSIG name:algorithm:secret
+                // optional tuple - Search Suffix 
                 Handle<Array> tuple = Handle<Array>::Cast(ipOrTuple);
                 if (tuple->Length() > 0) {
                     NanUtf8String asciiStr(tuple->Get(0)->ToString());
@@ -294,18 +322,22 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                         // TLS hostname or TSIG (TODO: fix to allow this if optional port is not set)
                         NanUtf8String asciiBuffer(tuple->Get(2)->ToString());
  
-                        if (((char *)*asciiBuffer)[0] != '^') { // not tsig 
-                            getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiBuffer);
+                        if (((char *)*asciiBuffer)[0] == '^') { // tsig 
+                            tsigHelper(ipDict, *asciiBuffer);
+                        } else if (((char *)*asciiBuffer)[0] == '~') { // suffix 
+                            setSuffixes(context, *asciiBuffer);
                         }
                         else {
-                            tsigHelper(ipDict, *asciiBuffer);
+                            getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiBuffer);
                        }
                     }
                 }
             } else {
                 NanUtf8String asciiStr(ipOrTuple->ToString());
                 if (((char *)*asciiStr)[0] == '^') { // tsig 
-                            tsigHelper(ipDict, *asciiStr);
+                    tsigHelper(ipDict, *asciiStr);
+                } else if (((char *)*asciiStr)[0] == '~') { // suffix 
+                    setSuffixes(context, *asciiStr);
                 }
                 else ipDict = getdns_util_create_ip(*asciiStr);
             }

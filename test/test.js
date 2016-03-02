@@ -406,7 +406,7 @@ describe("getdns test", function() {
         up1.push(upstreamresolvers);
 // create the contexts we need to test with the above options
         ctx.upstream_recursive_servers = up1;
-            ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting" : true}, function(err, result) {
+        ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting" : true}, function(err, result) {
                 console.log(JSON.stringify(result, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
@@ -414,6 +414,56 @@ describe("getdns test", function() {
                 finish(ctx, done);
             }); 
         });
+    });
+
+
+    describe("BADDNS", function() {
+        it("BADDNS should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "8.8.8.8"
+                ]
+            });
+            ctx.general("_443._tcp.www.nlnetlabs.nl", getdns.RRTYPE_TXT, {"add_warning_for_bad_dns" : true}, function(err, result) {
+                console.log(JSON.stringify(result.replies_tree[0].bad_dns, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            });
+      });
+    });
+    
+    describe("SUFFIX", function() {
+        it("SUFFIX should return successfully", function(done) {
+            this.timeout(10000);
+            var ctx = getdns.createContext({
+                "stub" : true,
+                "return_dnssec_status" : false,
+                "upstreams" : [
+                    "8.8.8.8"
+                ]
+            });
+            port = 53;
+            var upstreamresolvers = [];
+            upstreamresolvers.push("8.8.8.8");
+            upstreamresolvers.push(port);
+            upstreamresolvers.push("~getdnsapi.net,net");
+            var up1 = [];
+            up1.push(upstreamresolvers);
+
+            ctx.upstream_recursive_servers = up1;
+            ctx.general("www.verisignlabs", getdns.RRTYPE_A, function(err, result) {
+                console.log(JSON.stringify(result, null, 2));
+                expect(err).to.not.be.ok();
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                finish(ctx, done);
+            });
+      });
     });
 });
 
