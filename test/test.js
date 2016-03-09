@@ -283,7 +283,6 @@ describe("getdns test", function() {
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
             //ctx.address("getdnsapi.net", function(err, result) {
             ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
-                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -319,7 +318,6 @@ describe("getdns test", function() {
         ctx.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
         ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
         ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
-                console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -341,7 +339,6 @@ describe("getdns test", function() {
             });
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
-                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -359,7 +356,6 @@ describe("getdns test", function() {
             });
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
-                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -378,7 +374,6 @@ describe("getdns test", function() {
             // todo debug ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
 	    ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
-                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -407,7 +402,8 @@ describe("getdns test", function() {
 // create the contexts we need to test with the above options
         ctx.upstream_recursive_servers = up1;
         ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting" : true}, function(err, result) {
-                console.log(JSON.stringify(result, null, 2));
+                expect(result.replies_tree[0].tsig_status).to.be.equal(400);
+                expect(result.call_reporting).to.not.be.empty();
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -428,7 +424,7 @@ describe("getdns test", function() {
                 ]
             });
             ctx.general("_443._tcp.www.nlnetlabs.nl", getdns.RRTYPE_TXT, {"add_warning_for_bad_dns" : true}, function(err, result) {
-                console.log(JSON.stringify(result.replies_tree[0].bad_dns, null, 2));
+                expect(result.replies_tree[0].bad_dns).to.not.be.empty();
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -457,7 +453,7 @@ describe("getdns test", function() {
 
             ctx.upstream_recursive_servers = up1;
             ctx.general("www.verisignlabs", getdns.RRTYPE_A, function(err, result) {
-                console.log(JSON.stringify(result, null, 2));
+//                console.log(JSON.stringify(result, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
