@@ -115,6 +115,13 @@ static void setTransport(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setRedirects(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_follow_redirects(context, (getdns_redirects_t) num);
+    }
+}
+
 static void setTlsAuthentication(getdns_context* context, Handle<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
@@ -168,6 +175,14 @@ static void setResolutionType(getdns_context* context, Handle<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_resolution_type(context, (getdns_resolution_t) num);
+    }
+}
+
+
+static void setAppendName(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_append_name(context, (getdns_append_name_t) num);
     }
 }
 
@@ -298,6 +313,39 @@ static void setSuffixes(getdns_context* context, char* buf) {
        getdns_list_destroy(suffixes);
 }
 
+#define EXAMPLE_PIN "pin-sha256=\"E9CZ9INDbd+2eRQozYqqbQ2yXLVKB9+xcprMF+44U1g=\""
+
+static int setPinset(getdns_context* context, char* buf) {
+    
+    getdns_dict *pubkey_pin = NULL;
+    static getdns_list *pubkey_pinset = NULL;
+    static size_t pincount = 0;
+    getdns_return_t r = GETDNS_RETURN_GOOD;
+
+    pubkey_pin = getdns_pubkey_pin_create_from_string(context,
+       buf); 
+    if (pubkey_pin == NULL) {
+        fprintf(stderr, "could not convert '%s' into a " \
+            "public key pin.\n" \
+            "Good pins look like: " EXAMPLE_PIN "\n" \
+            "Please see RFC 7469 for details about " \
+            "the format\n", buf);
+         return GETDNS_RETURN_GENERIC_ERROR;
+     }
+     if (pubkey_pinset == NULL)
+         pubkey_pinset = getdns_list_create_with_context(context);
+         if (r = getdns_list_set_dict(pubkey_pinset, pincount++,
+             pubkey_pin), r) {
+                 fprintf(stderr, "Failed to add pin to pinset (error %d: %s)\n",
+                     r, getdns_get_errorstr_by_id(r));
+                 getdns_dict_destroy(pubkey_pin);
+                 pubkey_pin = NULL;
+                 return GETDNS_RETURN_GENERIC_ERROR;
+            }
+            getdns_dict_destroy(pubkey_pin);
+            pubkey_pin = NULL;
+
+}
 static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
@@ -359,10 +407,20 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     }
 }
 
+static void setDnsRootServers(getdns_context* context, Handle<Value> opt) {
+}
+
 static void setTimeout(getdns_context* context, Handle<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_timeout(context, num);
+    }
+}
+
+static void setDnssecAllowedSkew(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsNumber()) {
+        uint32_t num = opt->Uint32Value();
+        getdns_context_set_dnssec_allowed_skew(context, num);
     }
 }
 
@@ -388,11 +446,14 @@ static OptionSetter SETTERS[] = {
     { "upstreams", setUpstreams },
     { "upstream_recursive_servers", setUpstreams },
     { "timeout", setTimeout },
+    { "dnssecallowedskew", setDnssecAllowedSkew },
     { "use_threads", setUseThreads },
     { "return_dnssec_status", setReturnDnssecStatus },
     { "dns_transport", setTransport},
+    { "follow_redirects", setRedirects},
     { "tls_authentication", setTlsAuthentication},
     { "resolution_type", setResolutionType },
+    { "append_name", setAppendName },
     { "namespaces", setNamespaceList },
     { "dns_transport_list", setTransportList }
 };
