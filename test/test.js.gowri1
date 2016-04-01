@@ -283,6 +283,7 @@ describe("getdns test", function() {
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
             //ctx.address("getdnsapi.net", function(err, result) {
             ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -297,7 +298,6 @@ describe("getdns test", function() {
             var ctx = getdns.createContext({
                 "stub" : true,
                 "return_dnssec_status" : false,
-                "return_call_reporting" : true,
                 "upstreams" : [
                     "185.49.141.38"// , 853, "getdnsapi.net"
                 ]
@@ -318,6 +318,7 @@ describe("getdns test", function() {
         ctx.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
         ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
         ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+                console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -339,6 +340,7 @@ describe("getdns test", function() {
             });
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -356,6 +358,7 @@ describe("getdns test", function() {
             });
 	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -374,6 +377,7 @@ describe("getdns test", function() {
             // todo debug ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
 	    ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
             ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -389,117 +393,18 @@ describe("getdns test", function() {
                 "stub" : true,
                 "return_dnssec_status" : false,
                 "upstreams" : [
-                    "185.49.141.37" // , 853 , "^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ=="
+                    "185.49.141.38", 853, "hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ=="
                 ]
             });
-        port = 53;
-        var upstreamresolvers = [];
-        upstreamresolvers.push("185.49.141.37");
-        upstreamresolvers.push(port);
-        upstreamresolvers.push("^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==");
-        var up1 = [];
-        up1.push(upstreamresolvers);
-// create the contexts we need to test with the above options
-        ctx.upstream_recursive_servers = up1;
-        ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting" : true}, function(err, result) {
-                expect(result.replies_tree[0].tsig_status).to.be.equal(400);
-                expect(result.call_reporting).to.not.be.empty();
+	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+            ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+                //console.log(JSON.stringify(result.replies_tree, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
             }); 
         });
-    });
-
-
-    describe("BADDNS", function() {
-        it("BADDNS should return successfully", function(done) {
-            this.timeout(10000);
-            var ctx = getdns.createContext({
-                "stub" : true,
-                "return_dnssec_status" : false,
-                "upstreams" : [
-                    "8.8.8.8"
-                ]
-            });
-            ctx.general("_443._tcp.www.nlnetlabs.nl", getdns.RRTYPE_TXT, {"add_warning_for_bad_dns" : true}, function(err, result) {
-                expect(result.replies_tree[0].bad_dns).to.not.be.empty();
-                expect(err).to.not.be.ok();
-                expect(result.replies_tree).to.be.an(Array);
-                expect(result.replies_tree).to.not.be.empty();
-                finish(ctx, done);
-            });
-      });
-    });
-    
-    describe("SUFFIX", function() {
-        it("SUFFIX should return successfully", function(done) {
-            this.timeout(10000);
-            var ctx = getdns.createContext({
-                "stub" : true,
-                "return_dnssec_status" : false,
-                "upstreams" : [
-                    "8.8.8.8"
-                ]
-            });
-            port = 53;
-            var upstreamresolvers = [];
-            upstreamresolvers.push("8.8.8.8");
-            upstreamresolvers.push(port);
-            upstreamresolvers.push("~getdnsapi.net,net");
-            var up1 = [];
-            up1.push(upstreamresolvers);
-            ctx.upstream_recursive_servers = up1;
-            ctx.general("www.verisignlabs", getdns.RRTYPE_A, function(err, result) {
-                expect(err).to.not.be.ok();
-                expect(result.replies_tree).to.be.an(Array);
-                expect(result.replies_tree).to.not.be.empty();
-                finish(ctx, done);
-            });
-      });
-    });
-
-    describe("ALLSTATUS", function() {
-        it("ALLSTATUS should return successfully", function(done) {
-            this.timeout(10000);
-            var ctx = getdns.createContext({
-                "stub" : true,
-                "return_dnssec_status" : true,
-                "upstreams" : [
-                    "8.8.8.8"
-                ]
-            });
-            ctx.general("dnssec_failed.org", getdns.RRTYPE_A, {"dnssec_return_all_statuses" : true}, function(err, result) {
-                expect(err).to.not.be.ok();
-                expect(result.replies_tree).to.be.an(Array);
-                expect(result.replies_tree).to.not.be.empty();
-                finish(ctx, done);
-            });
-      });
-    });
-    
-    describe("APPENDNAME", function() {
-        it("APPENDNAME should return successfully", function(done) {
-            this.timeout(10000);
-            var ctx = getdns.createContext({
-                "stub" : true,
-                "return_dnssec_status" : false,
-                "upstreams" : [
-                    "8.8.8.8"
-                ]
-            });
-            ctx.suffix = "org";           
-	    ctx.append_name = getdns.APPEND_NAME_ALWAYS; //APPEND_NAME_TO_SINGLE_LABEL_FIRST;
-            ctx.general("www.verisignlabs", getdns.RRTYPE_A, {"return_call_reporting" : true}, function(err, result) {
-//                console.log(JSON.stringify(result, null, 2));
-                expect(err).to.not.be.ok();
-                expect(result.call_reporting).to.not.be.empty();
-                expect(result.replies_tree).to.be.an(Array);
-                expect(result.replies_tree).to.not.be.empty();
-                finish(ctx, done);
-            });
-      });
     });
 });
 

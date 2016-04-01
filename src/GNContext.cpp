@@ -34,6 +34,8 @@
 #include <node_buffer.h>
 #include <string.h>
 #include <nan.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 using namespace v8;
@@ -286,11 +288,12 @@ void tsigHelper(getdns_dict *ipDict, char *buf) {
     }
 }
 
+
 // eg:  getdnsapi.net,com for www.verisignlabs
 // Will first try to get the addresses for
 // www.verisignlabs.getdnsapi.net and will then try and return the
 // successfull lookup of the addresses for www.verisignlabs.com.
-static void setSuffixes(getdns_context* context, char* buf) {
+static void setSuffixesHelper(getdns_context* context, char* buf) {
 
     getdns_list *suffixes;
     char *suffix;
@@ -299,7 +302,7 @@ static void setSuffixes(getdns_context* context, char* buf) {
 
     if (!(suffixes = getdns_list_create()))
         return;  // TODO handle memory errors
-    suffix = strtok(&buf[1], ",");
+    suffix = strtok(buf, ",");
         j = 0;
         while (suffix) {
             bindata.size = strlen(suffix);
@@ -313,39 +316,49 @@ static void setSuffixes(getdns_context* context, char* buf) {
        getdns_list_destroy(suffixes);
 }
 
+static void setSuffixes(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsString()) {
+         NanUtf8String suff(opt->ToString());
+         setSuffixesHelper(context, (char *)*suff);
+    }  
+}
+
 #define EXAMPLE_PIN "pin-sha256=\"E9CZ9INDbd+2eRQozYqqbQ2yXLVKB9+xcprMF+44U1g=\""
 
-static int setPinset(getdns_context* context, char* buf) {
-    
-    getdns_dict *pubkey_pin = NULL;
-    static getdns_list *pubkey_pinset = NULL;
-    static size_t pincount = 0;
-    getdns_return_t r = GETDNS_RETURN_GOOD;
+static void setPinset(getdns_context* context, Handle<Value> opt) {
+    if (opt->IsString()) {
+        NanUtf8String pin(opt->ToString());
+        getdns_dict *pubkey_pin = NULL;
+        static getdns_list *pubkey_pinset = NULL;
+        static size_t pincount = 0;
+        getdns_return_t r = GETDNS_RETURN_GOOD;
 
-    pubkey_pin = getdns_pubkey_pin_create_from_string(context,
-       buf); 
-    if (pubkey_pin == NULL) {
-        fprintf(stderr, "could not convert '%s' into a " \
+        pubkey_pin = getdns_pubkey_pin_create_from_string(context,
+          (char *)*pin); 
+        if (pubkey_pin == NULL) {
+         fprintf(stderr, "could not convert '%s' into a " \
             "public key pin.\n" \
             "Good pins look like: " EXAMPLE_PIN "\n" \
             "Please see RFC 7469 for details about " \
-            "the format\n", buf);
-         return GETDNS_RETURN_GENERIC_ERROR;
-     }
-     if (pubkey_pinset == NULL)
-         pubkey_pinset = getdns_list_create_with_context(context);
-         if (r = getdns_list_set_dict(pubkey_pinset, pincount++,
+            "the format\n", (char *)*pin);
+         return;
+        }
+        if (pubkey_pinset == NULL) {
+          pubkey_pinset = getdns_list_create_with_context(context);
+          if (r = getdns_list_set_dict(pubkey_pinset, pincount++,
              pubkey_pin), r) {
                  fprintf(stderr, "Failed to add pin to pinset (error %d: %s)\n",
                      r, getdns_get_errorstr_by_id(r));
                  getdns_dict_destroy(pubkey_pin);
                  pubkey_pin = NULL;
-                 return GETDNS_RETURN_GENERIC_ERROR;
+                 return;
             }
             getdns_dict_destroy(pubkey_pin);
             pubkey_pin = NULL;
-
+       }
+    }  
 }
+
 static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
@@ -373,7 +386,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                         if (((char *)*asciiBuffer)[0] == '^') { // tsig 
                             tsigHelper(ipDict, *asciiBuffer);
                         } else if (((char *)*asciiBuffer)[0] == '~') { // suffix 
-                            setSuffixes(context, *asciiBuffer);
+                            setSuffixesHelper(context, &((char *)*asciiBuffer)[1]);
                         }
                         else {
                             getdns_dict_util_set_string(ipDict, (char *)"tls_auth_name", *asciiBuffer);
@@ -385,7 +398,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                 if (((char *)*asciiStr)[0] == '^') { // tsig 
                     tsigHelper(ipDict, *asciiStr);
                 } else if (((char *)*asciiStr)[0] == '~') { // suffix 
-                    setSuffixes(context, *asciiStr);
+                    setSuffixesHelper(context, &((char *)*asciiStr)[1]);
                 }
                 else ipDict = getdns_util_create_ip(*asciiStr);
             }
@@ -407,8 +420,6 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
     }
 }
 
-static void setDnsRootServers(getdns_context* context, Handle<Value> opt) {
-}
 
 static void setTimeout(getdns_context* context, Handle<Value> opt) {
     if (opt->IsNumber()) {
@@ -434,6 +445,70 @@ static void setReturnDnssecStatus(getdns_context* context, Handle<Value> opt) {
     getdns_context_set_return_dnssec_status(context, val);
 }
 
+// set alternate root servers from a file passed in
+static void setDnsRootServers(getdns_context* context, Handle<Value> opt)
+{
+    FILE *fh;
+    getdns_list *hints = NULL;
+
+    if (opt->IsString()) {
+         NanUtf8String roots(opt->ToString());
+        if (!(fh = fopen((char *)*roots, "r"))) {
+           fprintf(stderr, "Could not open \"%s\""
+           ": %s\n", (char *)*roots, strerror(errno));
+           return;
+        }
+        if (getdns_fp2rr_list(fh, &hints, NULL, 3600)) {
+           fprintf(stderr,"Could not parse "
+             "\"%s\"\n", (char *)*roots);
+           return;
+        }
+        fclose(fh);
+        if (getdns_context_set_dns_root_servers(
+            context, hints)) {
+            fprintf(stderr,"Could not set "
+               "root servers from \"%s\"\n",
+               (char *)*roots);
+            return;
+        }
+        getdns_list_destroy(hints);
+        hints = NULL;
+    }
+}
+
+
+// Read the location of the Trust anchor and pass it to getdns.
+// TODO: actually pass in the trust anchor. 
+static void setTrustAnchor(getdns_context *context, Handle<Value> opt)
+{
+    FILE *fh;
+    getdns_list *tas = NULL;
+    if (opt->IsString()) {
+         NanUtf8String ta(opt->ToString());
+
+       if (!(fh = fopen((char *)*ta, "r"))) {
+           fprintf(stderr, "Could not open \"%s\""
+           ": %s\n", (char *)*ta, strerror(errno));
+           return;
+        }
+        if (getdns_fp2rr_list(fh, &tas, NULL, 3600)) {
+           fprintf(stderr,"Could not parse "
+             "\"%s\"\n", (char *)*ta);
+           return;
+        }
+        fclose(fh);
+        if (getdns_context_set_dnssec_trust_anchors(
+            context, tas)) {
+            fprintf(stderr,"Could not set "
+               "root servers from \"%s\"\n",
+               (char *)*ta);
+            return;
+        }
+        getdns_list_destroy(tas);
+        tas = NULL;
+    }
+}
+
 
 typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
 typedef struct OptionSetter {
@@ -455,7 +530,12 @@ static OptionSetter SETTERS[] = {
     { "resolution_type", setResolutionType },
     { "append_name", setAppendName },
     { "namespaces", setNamespaceList },
-    { "dns_transport_list", setTransportList }
+    { "suffix", setSuffixes },
+    { "pinset", setPinset },
+    { "trustanchor", setTrustAnchor },
+    { "dnsrootserver", setDnsRootServers },
+    { "dns_transport_list", setTransportList },
+    { "dns_root_server", setDnsRootServers }
 };
 
 static size_t NUM_SETTERS = sizeof(SETTERS) / sizeof(OptionSetter);
