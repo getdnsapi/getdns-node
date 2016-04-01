@@ -454,8 +454,7 @@ static void setDnsRootServers(getdns_context* context, Handle<Value> opt)
     if (opt->IsString()) {
          NanUtf8String roots(opt->ToString());
         if (!(fh = fopen((char *)*roots, "r"))) {
-           fprintf(stderr, "Could not open \"%s\""
-           ": %s\n", (char *)*roots, strerror(errno));
+           fprintf(stderr, "Could not open %s\n", (char *)*roots);
            return;
         }
         if (getdns_fp2rr_list(fh, &hints, NULL, 3600)) {
@@ -487,8 +486,7 @@ static void setTrustAnchor(getdns_context *context, Handle<Value> opt)
          NanUtf8String ta(opt->ToString());
 
        if (!(fh = fopen((char *)*ta, "r"))) {
-           fprintf(stderr, "Could not open \"%s\""
-           ": %s\n", (char *)*ta, strerror(errno));
+           fprintf(stderr, "Could not open %s\n", (char *)*ta);
            return;
         }
         if (getdns_fp2rr_list(fh, &tas, NULL, 3600)) {
