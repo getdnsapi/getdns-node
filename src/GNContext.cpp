@@ -566,7 +566,6 @@ static size_t NUM_UINT16_SETTERS = sizeof(UINT16_OPTION_SETTERS) / sizeof(Uint16
 // End setters
 NAN_GETTER(GNContext::GetContextValue) {
     // context has no getters yet
-    Nan::HandleScope scope;
     info.GetReturnValue().Set(Nan::New<Integer>(-1));
 }
 NAN_SETTER(GNContext::SetContextValue) {
@@ -673,7 +672,6 @@ void GNContext::Init(Local<Object> target) {
 
 // Explicity destroy the context
 NAN_METHOD(GNContext::Destroy) {
-    Nan::HandleScope scope;
     GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx) {
         Nan::ThrowError(Nan::New<String>("Context is invalid.").ToLocalChecked());
@@ -685,7 +683,6 @@ NAN_METHOD(GNContext::Destroy) {
 
 // Create a context (new op)
 NAN_METHOD(GNContext::New) {
-    Nan::HandleScope scope;
     if (info.IsConstructCall()) {
         // new obj
         GNContext* ctx = new GNContext();
@@ -758,7 +755,6 @@ void GNContext::Callback(getdns_context *context,
 
 // Cancel a req.  Expect it to be a transaction id as a buffer
 NAN_METHOD(GNContext::Cancel) {
-    Nan::HandleScope scope;
     GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx || !ctx->context_) {
         info.GetReturnValue().Set(Nan::False());
@@ -777,7 +773,6 @@ NAN_METHOD(GNContext::Cancel) {
 
 // Handle getdns general
 NAN_METHOD(GNContext::Lookup) {
-    Nan::HandleScope scope;
     // name, type, and callback are required
     if (info.Length() < 3) {
         Nan::ThrowTypeError("At least 3 arguments are required.");
@@ -843,7 +838,6 @@ NAN_METHOD(GNContext::HelperLookup) {
     // first argument is a string
     // last argument must be a callback
     // optional argument of extensions
-    Nan::HandleScope scope;
     // name, type, and callback are required
     if (info.Length() < 2) {
         Nan::ThrowTypeError("At least 2 arguments are required.");

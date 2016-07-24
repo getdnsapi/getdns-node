@@ -307,9 +307,8 @@ Local<Value> GNUtil::convertToBuffer(void* data, size_t size) {
 }
 
 Local<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
-    Nan::EscapableHandleScope scope;
     if (!list) {
-        return scope.Escape(Nan::Null());
+        return Nan::Null();
     }
     size_t len;
     getdns_list_get_length(list, &len);
@@ -350,7 +349,7 @@ Local<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
                 break;
         }
     }
-    return scope.Escape(array);
+    return array;
 }
 
 // potential helper to get the ip string of a dict
@@ -378,9 +377,8 @@ char* getdns_dict_to_ip_string(getdns_dict* dict) {
 
 
 Local<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
-    Nan::EscapableHandleScope scope;
     if (!dict) {
-        return scope.Escape(Nan::Null());
+        return Nan::Null();
     }
 
     // try it as an IP
@@ -388,7 +386,7 @@ Local<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
     if (ipStr) {
         Local<Value> result = Nan::New<String>(ipStr).ToLocalChecked();
         free(ipStr);
-        return scope.Escape(result);
+        return result;
     }
 
     getdns_list* names;
@@ -436,7 +434,7 @@ Local<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
         }
     }
     getdns_list_destroy(names);
-    return scope.Escape(result);
+    return result;
 }
 
 // Enums to determine what type a JSValue is
