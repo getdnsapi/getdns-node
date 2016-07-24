@@ -268,7 +268,7 @@ static Local<Value> convertBinData(getdns_bindata* data,
     }
     // basic string?
     if (printable) {
-        return Nan::New<String>( (char*).ToLocalChecked() data->data, data->size );
+        return Nan::New<String>( (char*) data->data, data->size ).ToLocalChecked();
     // the root
     } else if (data->size == 1 && data->data[0] == 0) {
         return Nan::New<String>(".").ToLocalChecked();
@@ -399,7 +399,7 @@ Local<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
     for (size_t i = 0; i < len; ++i) {
         getdns_bindata* nameBin;
         getdns_list_get_bindata(names, i, &nameBin);
-        Local<Value> name = Nan::New<String>((char*).ToLocalChecked() nameBin->data);
+        Local<Value> name = Nan::New<String>((char*) nameBin->data).ToLocalChecked();
         getdns_data_type type;
         getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
         switch (type) {
