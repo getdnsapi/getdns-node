@@ -658,11 +658,11 @@ void GNContext::Init(Local<Object> target) {
     Nan::SetPrototypeMethod(jsContextTpl, "destroy", GNContext::Destroy);
     // Helpers - delegate to the same function w/ different data
     jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getAddress").ToLocalChecked(),
-        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNAddress))->GetFunction());
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNAddress)));
     jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getHostname").ToLocalChecked(),
-        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNHostname))->GetFunction());
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNHostname)));
     jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getService").ToLocalChecked(),
-        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNService))->GetFunction());
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNService)));
 
     // Add the constructor
     target->Set(Nan::New<String>("Context").ToLocalChecked(), jsContextTpl->GetFunction());
@@ -731,6 +731,7 @@ void GNContext::Callback(getdns_context *context,
                          getdns_dict *response,
                          void *userArg,
                          getdns_transaction_t transId) {
+    Nan::HandleScope scope;
     CallbackData* data = static_cast<CallbackData*>(userArg);
     // Setup the callback arguments
     Local<Value> argv[3];
