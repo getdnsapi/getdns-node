@@ -33,18 +33,18 @@
 #include <getdns/getdns.h>
 
 // Getdns Context wrapper for Node
-class GNContext : public node::ObjectWrap {
+class GNContext : public Nan::ObjectWrap {
 public:
     // Node module initializer
-    static void Init(v8::Handle<v8::Object> target);
+    static void Init(v8::Local<v8::Object> target);
 
 private:
     GNContext();
     ~GNContext();
 
     // set options on the context
-    static void ApplyOptions(v8::Handle<v8::Object> self,
-                             v8::Handle<v8::Value> opts);
+    static void ApplyOptions(v8::Local<v8::Object> self,
+                             v8::Local<v8::Value> opts);
 
     // JS Functions
     static NAN_METHOD(New);
@@ -53,7 +53,7 @@ private:
     static NAN_METHOD(HelperLookup);
     static NAN_METHOD(Cancel);
 
-    static void InitProperties(v8::Handle<v8::Object> self);
+    static void InitProperties(v8::Local<v8::Object> self);
     static NAN_GETTER(GetContextValue);
     static NAN_SETTER(SetContextValue);
 
