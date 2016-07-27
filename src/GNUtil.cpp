@@ -253,7 +253,7 @@ priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
 // Convert bindata into a good representational string or
 // into a buffer.  Handles dname, printable, ".",
 // and an ip address if it is under a known key
-static Handle<Value> convertBinData(getdns_bindata* data,
+static Local<Value> convertBinData(getdns_bindata* data,
                                     const char* key) {
     bool printable = true;
     for (size_t i = 0; i < data->size; ++i) {
@@ -268,16 +268,16 @@ static Handle<Value> convertBinData(getdns_bindata* data,
     }
     // basic string?
     if (printable) {
-        return NanNew<String>( (char*) data->data, data->size );
+        return Nan::New<String>( (char*) data->data, data->size ).ToLocalChecked();
     // the root
     } else if (data->size == 1 && data->data[0] == 0) {
-        return NanNew<String>(".");
+        return Nan::New<String>(".").ToLocalChecked();
     // dname
     } else if (priv_getdns_bindata_is_dname(data)) {
         char* dname = NULL;
         if (getdns_convert_dns_name_to_fqdn(data, &dname)
             == GETDNS_RETURN_GOOD) {
-            Handle<Value> result = NanNew<String>(dname);
+            Local<Value> result = Nan::New<String>(dname).ToLocalChecked();
             free(dname);
             return result;
         }
@@ -287,7 +287,7 @@ static Handle<Value> convertBinData(getdns_bindata* data,
          strcmp(key, "ipv6_address") == 0)) {
         char* ipStr = getdns_display_ip_address(data);
         if (ipStr) {
-            Handle<Value> result = NanNew<String>(ipStr);
+            Local<Value> result = Nan::New<String>(ipStr).ToLocalChecked();
             free(ipStr);
             return result;
         }
@@ -297,23 +297,22 @@ static Handle<Value> convertBinData(getdns_bindata* data,
     return GNUtil::convertToBuffer(data->data, data->size);
 }
 
-Handle<Value> GNUtil::convertToBuffer(void* data, size_t size) {
+Local<Value> GNUtil::convertToBuffer(void* data, size_t size) {
     //construct a new buffer of the size we need.
-    Local<Object> nodeBuffer = NanNewBufferHandle(size);
+    Local<Object> nodeBuffer = Nan::NewBuffer(size).ToLocalChecked();
 
     //Copy the contents of our payload into the buffer
     memcpy(node::Buffer::Data(nodeBuffer), data, size);
     return nodeBuffer;
 }
 
-Handle<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
-    NanEscapableScope();
+Local<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
     if (!list) {
-        return NanEscapeScope(NanNull());
+        return Nan::Null();
     }
     size_t len;
     getdns_list_get_length(list, &len);
-    Handle<Array> array = NanNew<Array>();
+    Local<Array> array = Nan::New<Array>();
     for (size_t i = 0; i < len; ++i) {
         getdns_data_type type;
         getdns_list_get_data_type(list, i, &type);
@@ -329,7 +328,7 @@ Handle<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
             {
                 uint32_t res = 0;
                 getdns_list_get_int(list, i, &res);
-                array->Set(i, NanNew<Integer>(res));
+                array->Set(i, Nan::New<Integer>(res));
                 break;
             }
             case t_dict:
@@ -350,7 +349,7 @@ Handle<Value> GNUtil::convertToJSArray(struct getdns_list* list) {
                 break;
         }
     }
-    return NanEscapeScope(array);
+    return array;
 }
 
 // potential helper to get the ip string of a dict
@@ -377,29 +376,28 @@ char* getdns_dict_to_ip_string(getdns_dict* dict) {
 }
 
 
-Handle<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
-    NanEscapableScope();
+Local<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
     if (!dict) {
-        return NanEscapeScope(NanNull());
+        return Nan::Null();
     }
 
     // try it as an IP
     char* ipStr = getdns_dict_to_ip_string(dict);
     if (ipStr) {
-        Handle<Value> result = NanNew<String>(ipStr);
+        Local<Value> result = Nan::New<String>(ipStr).ToLocalChecked();
         free(ipStr);
-        return NanEscapeScope(result);
+        return result;
     }
 
     getdns_list* names;
     getdns_dict_get_names(dict, &names);
     size_t len = 0;
-    Handle<Object> result = NanNew<Object>();
+    Local<Object> result = Nan::New<Object>();
     getdns_list_get_length(names, &len);
     for (size_t i = 0; i < len; ++i) {
         getdns_bindata* nameBin;
         getdns_list_get_bindata(names, i, &nameBin);
-        Handle<Value> name = NanNew<String>((char*) nameBin->data);
+        Local<Value> name = Nan::New<String>((char*) nameBin->data).ToLocalChecked();
         getdns_data_type type;
         getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
         switch (type) {
@@ -414,7 +412,7 @@ Handle<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
             {
                 uint32_t res = 0;
                 getdns_dict_get_int(dict, (char*)nameBin->data, &res);
-                result->Set(name, NanNew<Integer>(res));
+                result->Set(name, Nan::New<Integer>(res));
                 break;
             }
             case t_dict:
@@ -436,7 +434,7 @@ Handle<Value> GNUtil::convertToJSObj(struct getdns_dict* dict) {
         }
     }
     getdns_list_destroy(names);
-    return NanEscapeScope(result);
+    return result;
 }
 
 // Enums to determine what type a JSValue is
@@ -450,13 +448,13 @@ typedef enum GetdnsType {
     UnknownType
 } GetdnsType;
 
-bool GNUtil::isDictionaryObject(Handle<Value> obj) {
+bool GNUtil::isDictionaryObject(Local<Value> obj) {
     return obj->IsObject() &&
            !(obj->IsRegExp() || obj->IsDate() ||
              obj->IsFunction() || obj->IsArray());
 }
 
-static GetdnsType getGetdnsType(Handle<Value> value) {
+static GetdnsType getGetdnsType(Local<Value> value) {
     if (value->IsNumber() || value->IsNumberObject()) {
         return IntType;
     } else if (value->IsBoolean() || value->IsBooleanObject()) {
@@ -476,7 +474,7 @@ static GetdnsType getGetdnsType(Handle<Value> value) {
     return UnknownType;
 }
 
-getdns_list* GNUtil::convertToList(Handle<Array> array) {
+getdns_list* GNUtil::convertToList(Local<Array> array) {
     uint32_t len = array->Length();
     getdns_list* result = getdns_list_create();
     for (uint32_t i = 0; i < len; ++i) {
@@ -514,7 +512,7 @@ getdns_list* GNUtil::convertToList(Handle<Array> array) {
                 break;
             case ListType:
                 {
-                    Handle<Array> subArray = Handle<Array>::Cast(val);
+                    Local<Array> subArray = Local<Array>::Cast(val);
                     struct getdns_list* sublist = GNUtil::convertToList(subArray);
                     getdns_list_set_list(result, idx, sublist);
                     getdns_list_destroy(sublist);
@@ -522,7 +520,7 @@ getdns_list* GNUtil::convertToList(Handle<Array> array) {
                 break;
             case DictType:
                 {
-                    Handle<Object> subObj = val->ToObject();
+                    Local<Object> subObj = val->ToObject();
                     struct getdns_dict* subdict = GNUtil::convertToDict(subObj);
                     if (subdict) {
                         getdns_list_set_dict(result, idx, subdict);
@@ -537,7 +535,7 @@ getdns_list* GNUtil::convertToList(Handle<Array> array) {
     return result;
 }
 
-getdns_dict* GNUtil::convertToDict(Handle<Object> obj) {
+getdns_dict* GNUtil::convertToDict(Local<Object> obj) {
     if (obj->IsRegExp() || obj->IsDate() ||
         obj->IsFunction() || obj->IsUndefined() ||
         obj->IsNull() || obj->IsArray()) {
@@ -547,7 +545,7 @@ getdns_dict* GNUtil::convertToDict(Handle<Object> obj) {
     getdns_dict* result = getdns_dict_create();
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
-        NanUtf8String name(nameVal);
+        Nan::Utf8String name(nameVal);
         Local<Value> val = obj->Get(nameVal);
         GetdnsType type = getGetdnsType(val);
         switch (type) {
@@ -581,7 +579,7 @@ getdns_dict* GNUtil::convertToDict(Handle<Object> obj) {
                 break;
             case ListType:
                 {
-                    Handle<Array> subArray = Handle<Array>::Cast(val);
+                    Local<Array> subArray = Local<Array>::Cast(val);
                     struct getdns_list* sublist = GNUtil::convertToList(subArray);
                     getdns_dict_set_list(result, *name, sublist);
                     getdns_list_destroy(sublist);
@@ -589,7 +587,7 @@ getdns_dict* GNUtil::convertToDict(Handle<Object> obj) {
                 break;
             case DictType:
                 {
-                    Handle<Object> subObj = val->ToObject();
+                    Local<Object> subObj = val->ToObject();
                     struct getdns_dict* subdict = GNUtil::convertToDict(subObj);
                     if (subdict) {
                         getdns_dict_set_dict(result, *name, subdict);

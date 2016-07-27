@@ -44,16 +44,16 @@ public:
     static bool attachContextToNode(struct getdns_context* context);
 
     // Conversions from getdns -> JS
-    static Handle<Value> convertToJSArray(struct getdns_list* list);
-    static Handle<Value> convertToJSObj(struct getdns_dict* dict);
-    static Handle<Value> convertToBuffer(void* data, size_t size);
+    static Local<Value> convertToJSArray(struct getdns_list* list);
+    static Local<Value> convertToJSObj(struct getdns_dict* dict);
+    static Local<Value> convertToBuffer(void* data, size_t size);
 
     // Conversions from JS -> getdns
-    static struct getdns_list* convertToList(Handle<Array> array);
-    static struct getdns_dict* convertToDict(Handle<Object> obj);
+    static struct getdns_list* convertToList(Local<Array> array);
+    static struct getdns_dict* convertToDict(Local<Object> obj);
 
     // Helper to determine if an object is a plain dict
-    static bool isDictionaryObject(Handle<Value> obj);
+    static bool isDictionaryObject(Local<Value> obj);
 
 private:
 

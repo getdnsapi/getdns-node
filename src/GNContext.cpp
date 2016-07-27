@@ -49,15 +49,15 @@ typedef enum LookupType {
 
 // Callback data passed to getdns callback as userarg
 typedef struct CallbackData {
-    NanCallback* callback;
+    Nan::Callback* callback;
     GNContext* ctx;
 } CallbackData;
 
 // Helper to create an error object for lookup callbacks
-static Handle<Value> makeErrorObj(const char* msg, int code) {
-    Handle<Object> obj = NanNew<Object>();
-    obj->Set(NanNew<String>("msg"), NanNew<String>(msg));
-    obj->Set(NanNew<String>("code"), NanNew<Integer>(code));
+static Local<Value> makeErrorObj(const char* msg, int code) {
+    Local<Object> obj = Nan::New<Object>();
+    obj->Set(Nan::New<String>("msg").ToLocalChecked(), Nan::New<String>(msg).ToLocalChecked());
+    obj->Set(Nan::New<String>("code").ToLocalChecked(), Nan::New<Integer>(code));
     return obj;
 }
 
@@ -110,30 +110,30 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
 typedef getdns_return_t (*getdns_context_uint8_t_setter)(getdns_context*, uint8_t);
 typedef getdns_return_t (*getdns_context_uint16_t_setter)(getdns_context*, uint16_t);
 
-static void setTransport(getdns_context* context, Handle<Value> opt) {
+static void setTransport(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_dns_transport(context, (getdns_transport_t) num);
     }
 }
 
-static void setRedirects(getdns_context* context, Handle<Value> opt) {
+static void setRedirects(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_follow_redirects(context, (getdns_redirects_t) num);
     }
 }
 
-static void setTlsAuthentication(getdns_context* context, Handle<Value> opt) {
+static void setTlsAuthentication(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_tls_authentication(context, (getdns_tls_authentication_t) num);
     }
 }
 
-static void setTransportList(getdns_context* context, Handle<Value> opt) {
+static void setTransportList(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
-        Handle<Array> transportList = Handle<Array>::Cast(opt);
+        Local<Array> transportList = Local<Array>::Cast(opt);
         uint32_t numTransports = transportList->Length();
         // create a getdns_transport_list_t*
         getdns_transport_list_t* transports = new getdns_transport_list_t[numTransports];
@@ -148,9 +148,9 @@ static void setTransportList(getdns_context* context, Handle<Value> opt) {
     }
 }
 
-static void setNamespaceList(getdns_context* context, Handle<Value> opt) {
+static void setNamespaceList(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
-        Handle<Array> namespaceList = Handle<Array>::Cast(opt);
+        Local<Array> namespaceList = Local<Array>::Cast(opt);
         uint32_t numNamespaces = namespaceList->Length();
         // create a getdns_namespace_list_t*
         getdns_namespace_t* namespaces = new getdns_namespace_t[numNamespaces];
@@ -165,7 +165,7 @@ static void setNamespaceList(getdns_context* context, Handle<Value> opt) {
     }
 }
 
-static void setStub(getdns_context* context, Handle<Value> opt) {
+static void setStub(getdns_context* context, Local<Value> opt) {
     if (opt->IsTrue()) {
         getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
     } else {
@@ -173,7 +173,7 @@ static void setStub(getdns_context* context, Handle<Value> opt) {
     }
 }
 
-static void setResolutionType(getdns_context* context, Handle<Value> opt) {
+static void setResolutionType(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_resolution_type(context, (getdns_resolution_t) num);
@@ -181,7 +181,7 @@ static void setResolutionType(getdns_context* context, Handle<Value> opt) {
 }
 
 
-static void setAppendName(getdns_context* context, Handle<Value> opt) {
+static void setAppendName(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_append_name(context, (getdns_append_name_t) num);
@@ -316,18 +316,18 @@ static void setSuffixesHelper(getdns_context* context, char* buf) {
        getdns_list_destroy(suffixes);
 }
 
-static void setSuffixes(getdns_context* context, Handle<Value> opt) {
+static void setSuffixes(getdns_context* context, Local<Value> opt) {
     if (opt->IsString()) {
-         NanUtf8String suff(opt->ToString());
+         Nan::Utf8String suff(opt->ToString());
          setSuffixesHelper(context, (char *)*suff);
     }  
 }
 
 #define EXAMPLE_PIN "pin-sha256=\"E9CZ9INDbd+2eRQozYqqbQ2yXLVKB9+xcprMF+44U1g=\""
 
-static void setPinset(getdns_context* context, Handle<Value> opt) {
+static void setPinset(getdns_context* context, Local<Value> opt) {
     if (opt->IsString()) {
-        NanUtf8String pin(opt->ToString());
+        Nan::Utf8String pin(opt->ToString());
         getdns_dict *pubkey_pin = NULL;
         static getdns_list *pubkey_pinset = NULL;
         static size_t pincount = 0;
@@ -359,10 +359,10 @@ static void setPinset(getdns_context* context, Handle<Value> opt) {
     }  
 }
 
-static void setUpstreams(getdns_context* context, Handle<Value> opt) {
+static void setUpstreams(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
-        Handle<Array> values = Handle<Array>::Cast(opt);
+        Local<Array> values = Local<Array>::Cast(opt);
         for (uint32_t i = 0; i < values->Length(); ++i) {
             Local<Value> ipOrTuple = values->Get(i);
             getdns_dict* ipDict = NULL;
@@ -371,9 +371,9 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                 // optional tuple - TLS Hostname
                 // optional tuple - TSIG name:algorithm:secret
                 // optional tuple - Search Suffix 
-                Handle<Array> tuple = Handle<Array>::Cast(ipOrTuple);
+                Local<Array> tuple = Local<Array>::Cast(ipOrTuple);
                 if (tuple->Length() > 0) {
-                    NanUtf8String asciiStr(tuple->Get(0)->ToString());
+                    Nan::Utf8String asciiStr(tuple->Get(0)->ToString());
                     ipDict = getdns_util_create_ip(*asciiStr);
                     if (ipDict && tuple->Length() > 1 &&
                         tuple->Get(1)->IsNumber()) {
@@ -381,7 +381,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                         uint32_t port = tuple->Get(1)->Uint32Value();
                         getdns_dict_set_int(ipDict, "port", port);
                         // TLS hostname or TSIG (TODO: fix to allow this if optional port is not set)
-                        NanUtf8String asciiBuffer(tuple->Get(2)->ToString());
+                        Nan::Utf8String asciiBuffer(tuple->Get(2)->ToString());
  
                         if (((char *)*asciiBuffer)[0] == '^') { // tsig 
                             tsigHelper(ipDict, *asciiBuffer);
@@ -394,7 +394,7 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                     }
                 }
             } else {
-                NanUtf8String asciiStr(ipOrTuple->ToString());
+                Nan::Utf8String asciiStr(ipOrTuple->ToString());
                 if (((char *)*asciiStr)[0] == '^') { // tsig 
                     tsigHelper(ipDict, *asciiStr);
                 } else if (((char *)*asciiStr)[0] == '~') { // suffix 
@@ -408,51 +408,51 @@ static void setUpstreams(getdns_context* context, Handle<Value> opt) {
                 getdns_list_set_dict(upstreams, len, ipDict);
                 getdns_dict_destroy(ipDict);
             } else {
-                NanUtf8String msg(String::Concat(NanNew<String>("Upstream value is invalid: "), ipOrTuple->ToString()));
-                NanThrowTypeError(*msg);
+                Nan::Utf8String msg(String::Concat(Nan::New<String>("Upstream value is invalid: ").ToLocalChecked(), ipOrTuple->ToString()));
+                Nan::ThrowTypeError(*msg);
             }
         }
         getdns_return_t r = getdns_context_set_upstream_recursive_servers(context, upstreams);
         getdns_list_destroy(upstreams);
         if (r != GETDNS_RETURN_GOOD) {
-            NanThrowTypeError("Failed to set upstreams.");
+            Nan::ThrowTypeError("Failed to set upstreams.");
         }
     }
 }
 
 
-static void setTimeout(getdns_context* context, Handle<Value> opt) {
+static void setTimeout(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_timeout(context, num);
     }
 }
 
-static void setDnssecAllowedSkew(getdns_context* context, Handle<Value> opt) {
+static void setDnssecAllowedSkew(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
         getdns_context_set_dnssec_allowed_skew(context, num);
     }
 }
 
-static void setUseThreads(getdns_context* context, Handle<Value> opt) {
+static void setUseThreads(getdns_context* context, Local<Value> opt) {
     int val = opt->IsTrue() ? 1 : 0;
     getdns_context_set_use_threads(context, val);
 }
 
-static void setReturnDnssecStatus(getdns_context* context, Handle<Value> opt) {
+static void setReturnDnssecStatus(getdns_context* context, Local<Value> opt) {
     int val = opt->IsTrue() ? GETDNS_EXTENSION_TRUE : GETDNS_EXTENSION_FALSE;
     getdns_context_set_return_dnssec_status(context, val);
 }
 
 // set alternate root servers from a file passed in
-static void setDnsRootServers(getdns_context* context, Handle<Value> opt)
+static void setDnsRootServers(getdns_context* context, Local<Value> opt)
 {
     FILE *fh;
     getdns_list *hints = NULL;
 
     if (opt->IsString()) {
-         NanUtf8String roots(opt->ToString());
+         Nan::Utf8String roots(opt->ToString());
         if (!(fh = fopen((char *)*roots, "r"))) {
            fprintf(stderr, "Could not open %s\n", (char *)*roots);
            return;
@@ -478,12 +478,12 @@ static void setDnsRootServers(getdns_context* context, Handle<Value> opt)
 
 // Read the location of the Trust anchor and pass it to getdns.
 // TODO: actually pass in the trust anchor. 
-static void setTrustAnchor(getdns_context *context, Handle<Value> opt)
+static void setTrustAnchor(getdns_context *context, Local<Value> opt)
 {
     FILE *fh;
     getdns_list *tas = NULL;
     if (opt->IsString()) {
-         NanUtf8String ta(opt->ToString());
+         Nan::Utf8String ta(opt->ToString());
 
        if (!(fh = fopen((char *)*ta, "r"))) {
            fprintf(stderr, "Could not open %s\n", (char *)*ta);
@@ -508,7 +508,7 @@ static void setTrustAnchor(getdns_context *context, Handle<Value> opt)
 }
 
 
-typedef void (*context_setter)(getdns_context* context, Handle<Value> opt);
+typedef void (*context_setter)(getdns_context* context, Local<Value> opt);
 typedef struct OptionSetter {
     const char* opt_name;
     context_setter setter;
@@ -566,15 +566,14 @@ static size_t NUM_UINT16_SETTERS = sizeof(UINT16_OPTION_SETTERS) / sizeof(Uint16
 // End setters
 NAN_GETTER(GNContext::GetContextValue) {
     // context has no getters yet
-    NanScope();
-    NanReturnValue(NanNew<Integer>(-1));
+    info.GetReturnValue().Set(Nan::New<Integer>(-1));
 }
 NAN_SETTER(GNContext::SetContextValue) {
     // walk setters
-    NanUtf8String name(property);
-    GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());
+    Nan::Utf8String name(property);
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx) {
-        NanThrowError("Context is invalid.");
+        Nan::ThrowError("Context is invalid.");
     }
     size_t s = 0;
     bool found = false;
@@ -604,18 +603,18 @@ NAN_SETTER(GNContext::SetContextValue) {
     }
 }
 
-void GNContext::InitProperties(Handle<Object> ctx) {
+void GNContext::InitProperties(Local<Object> ctx) {
     size_t s = 0;
     for (s = 0; s < NUM_SETTERS; ++s) {
-        ctx->SetAccessor(NanNew<String>(SETTERS[s].opt_name),
+        Nan::SetAccessor(ctx, Nan::New<String>(SETTERS[s].opt_name).ToLocalChecked(),
             GNContext::GetContextValue, GNContext::SetContextValue);
     }
     for (s = 0; s < NUM_UINT8_SETTERS; ++s) {
-        ctx->SetAccessor(NanNew<String>(UINT8_OPTION_SETTERS[s].opt_name),
+        Nan::SetAccessor(ctx, Nan::New<String>(UINT8_OPTION_SETTERS[s].opt_name).ToLocalChecked(),
             GNContext::GetContextValue, GNContext::SetContextValue);
     }
     for (s = 0; s < NUM_UINT16_SETTERS; ++s) {
-        ctx->SetAccessor(NanNew<String>(UINT16_OPTION_SETTERS[s].opt_name),
+        Nan::SetAccessor(ctx, Nan::New<String>(UINT16_OPTION_SETTERS[s].opt_name).ToLocalChecked(),
             GNContext::GetContextValue, GNContext::SetContextValue);
 
     }
@@ -627,7 +626,7 @@ GNContext::~GNContext() {
     context_ = NULL;
 }
 
-void GNContext::ApplyOptions(Handle<Object> self, Handle<Value> optsV) {
+void GNContext::ApplyOptions(Local<Object> self, Local<Value> optsV) {
     if (!GNUtil::isDictionaryObject(optsV)) {
         return;
     }
@@ -647,25 +646,25 @@ void GNContext::ApplyOptions(Handle<Object> self, Handle<Value> optsV) {
 }
 
 // Module initialization
-void GNContext::Init(Handle<Object> target) {
+void GNContext::Init(Local<Object> target) {
     // prepare context object template
-    Local<FunctionTemplate> jsContextTpl = NanNew<FunctionTemplate>(GNContext::New);
-    jsContextTpl->SetClassName(NanNew<String>("Context"));
+    Local<FunctionTemplate> jsContextTpl = Nan::New<FunctionTemplate>(GNContext::New);
+    jsContextTpl->SetClassName(Nan::New<String>("Context").ToLocalChecked());
     jsContextTpl->InstanceTemplate()->SetInternalFieldCount(1);
     // Prototype
-    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "lookup", GNContext::Lookup);
-    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "cancel", GNContext::Cancel);
-    NODE_SET_PROTOTYPE_METHOD(jsContextTpl, "destroy", GNContext::Destroy);
+    Nan::SetPrototypeMethod(jsContextTpl, "lookup", GNContext::Lookup);
+    Nan::SetPrototypeMethod(jsContextTpl, "cancel", GNContext::Cancel);
+    Nan::SetPrototypeMethod(jsContextTpl, "destroy", GNContext::Destroy);
     // Helpers - delegate to the same function w/ different data
-    jsContextTpl->PrototypeTemplate()->Set(NanNew<String>("getAddress"),
-        NanNew<FunctionTemplate>(GNContext::HelperLookup, NanNew<Integer>(GNAddress))->GetFunction());
-    jsContextTpl->PrototypeTemplate()->Set(NanNew<String>("getHostname"),
-        NanNew<FunctionTemplate>(GNContext::HelperLookup, NanNew<Integer>(GNHostname))->GetFunction());
-    jsContextTpl->PrototypeTemplate()->Set(NanNew<String>("getService"),
-        NanNew<FunctionTemplate>(GNContext::HelperLookup, NanNew<Integer>(GNService))->GetFunction());
+    jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getAddress").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNAddress)));
+    jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getHostname").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNHostname)));
+    jsContextTpl->PrototypeTemplate()->Set(Nan::New<String>("getService").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(GNContext::HelperLookup, Nan::New<Integer>(GNService)));
 
     // Add the constructor
-    target->Set(NanNew<String>("Context"), jsContextTpl->GetFunction());
+    target->Set(Nan::New<String>("Context").ToLocalChecked(), jsContextTpl->GetFunction());
 
     // Export constants
     GNConstants::Init(target);
@@ -673,27 +672,25 @@ void GNContext::Init(Handle<Object> target) {
 
 // Explicity destroy the context
 NAN_METHOD(GNContext::Destroy) {
-    NanScope();
-    GNContext* ctx = ObjectWrap::Unwrap<GNContext>(args.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx) {
-        NanThrowError(NanNew<String>("Context is invalid."));
+        Nan::ThrowError(Nan::New<String>("Context is invalid.").ToLocalChecked());
     }
     getdns_context_destroy(ctx->context_);
     ctx->context_ = NULL;
-    NanReturnValue(NanTrue());
+    info.GetReturnValue().Set(Nan::True());
 }
 
 // Create a context (new op)
 NAN_METHOD(GNContext::New) {
-    NanScope();
-    if (args.IsConstructCall()) {
+    if (info.IsConstructCall()) {
         // new obj
         GNContext* ctx = new GNContext();
         getdns_return_t r = getdns_context_create(&ctx->context_, 1);
         if (r != GETDNS_RETURN_GOOD) {
             // Failed to create an underlying context
             delete ctx;
-            NanThrowError(NanNew<String>("Unable to create GNContext."));
+            Nan::ThrowError(Nan::New<String>("Unable to create GNContext.").ToLocalChecked());
         }
 
         // Attach the context to node
@@ -701,29 +698,29 @@ NAN_METHOD(GNContext::New) {
         if (!attached) {
             // Bail
             delete ctx;
-            NanThrowError(NanNew<String>("Unable to attach to Node."));
-            NanReturnUndefined();
+            Nan::ThrowError(Nan::New<String>("Unable to attach to Node.").ToLocalChecked());
+            return;
         }
-        ctx->Wrap(args.This());
+        ctx->Wrap(info.This());
         // add setters
-        GNContext::InitProperties(args.This());
+        GNContext::InitProperties(info.This());
         // Apply options if needed
-        if (args.Length() > 0) {
+        if (info.Length() > 0) {
             // could throw an
             TryCatch try_catch;
-            GNContext::ApplyOptions(args.This(), args[0]);
+            GNContext::ApplyOptions(info.This(), info[0]);
             if (try_catch.HasCaught()) {
                 // Need to bail
                 delete ctx;
                 try_catch.ReThrow();
-                NanReturnUndefined();
+                return;
             }
         }
-        NanReturnThis();
+        info.GetReturnValue().Set(info.This());
     } else {
-        NanThrowError(NanNew<String>("Must use new."));
+        Nan::ThrowError(Nan::New<String>("Must use new.").ToLocalChecked());
     }
-    NanReturnUndefined();
+    return;
 }
 
 void GNContext::Callback(getdns_context *context,
@@ -731,20 +728,21 @@ void GNContext::Callback(getdns_context *context,
                          getdns_dict *response,
                          void *userArg,
                          getdns_transaction_t transId) {
+    Nan::HandleScope scope;
     CallbackData* data = static_cast<CallbackData*>(userArg);
     // Setup the callback arguments
-    Handle<Value> argv[3];
+    Local<Value> argv[3];
     if (cbType == GETDNS_CALLBACK_COMPLETE) {
-        argv[0] = NanNull();
+        argv[0] = Nan::Null();
         argv[1] = GNUtil::convertToJSObj(response);
         getdns_dict_destroy(response);
     } else {
         argv[0] = makeErrorObj("Lookup failed.", cbType);
-        argv[1] = NanNull();
+        argv[1] = Nan::Null();
     }
     TryCatch try_catch;
     argv[2] = GNUtil::convertToBuffer(&transId, 8);
-    data->callback->Call(NanGetCurrentContext()->Global(), 3, argv);
+    data->callback->Call(Nan::GetCurrentContext()->Global(), 3, argv);
 
     if (try_catch.HasCaught())
         node::FatalException(try_catch);
@@ -757,63 +755,61 @@ void GNContext::Callback(getdns_context *context,
 
 // Cancel a req.  Expect it to be a transaction id as a buffer
 NAN_METHOD(GNContext::Cancel) {
-    NanScope();
-    GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx || !ctx->context_) {
-        NanReturnValue(NanFalse());
+        info.GetReturnValue().Set(Nan::False());
     }
-    if (args.Length() < 1) {
-        NanReturnValue(NanFalse());
+    if (info.Length() < 1) {
+        info.GetReturnValue().Set(Nan::False());
     }
-    if (node::Buffer::Length(args[0]) != 8) {
-        NanReturnValue(NanFalse());
+    if (node::Buffer::Length(info[0]) != 8) {
+        info.GetReturnValue().Set(Nan::False());
     }
     uint64_t transId;
-    memcpy(&transId, node::Buffer::Data(args[0]), 8);
+    memcpy(&transId, node::Buffer::Data(info[0]), 8);
     getdns_return_t r = getdns_cancel_callback(ctx->context_, transId);
-    NanReturnValue(r == GETDNS_RETURN_GOOD ? NanTrue() : NanFalse());
+    info.GetReturnValue().Set(r == GETDNS_RETURN_GOOD ? Nan::True() : Nan::False());
 }
 
 // Handle getdns general
 NAN_METHOD(GNContext::Lookup) {
-    NanScope();
     // name, type, and callback are required
-    if (args.Length() < 3) {
-        NanThrowTypeError("At least 3 arguments are required.");
+    if (info.Length() < 3) {
+        Nan::ThrowTypeError("At least 3 arguments are required.");
     }
     // last arg must be a callback
-    Local<Value> last = args[args.Length() - 1];
+    Local<Value> last = info[info.Length() - 1];
     if (!last->IsFunction()) {
-        NanThrowTypeError("Final argument must be a function.");
+        Nan::ThrowTypeError("Final argument must be a function.");
     }
     Local<Function> localCb = Local<Function>::Cast(last);
-    GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx || !ctx->context_) {
-        Handle<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
-        Handle<Value> cbArgs[] = { err };
-        NanMakeCallback(NanGetCurrentContext()->Global(), localCb, 1, cbArgs);
-        NanReturnUndefined();
+        Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
+        Local<Value> cbArgs[] = { err };
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        return;
     }
     // take first arg and make it a string
-    String::Utf8Value name(args[0]->ToString());
+    String::Utf8Value name(info[0]->ToString());
     // second arg must be a number
-    if (!args[1]->IsNumber()) {
-        Handle<Value> err = makeErrorObj("Second argument must be a number", GETDNS_RETURN_INVALID_PARAMETER);
-        Handle<Value> cbArgs[] = { err };
-        NanMakeCallback(NanGetCurrentContext()->Global(), localCb, 1, cbArgs);
-        NanReturnUndefined();
+    if (!info[1]->IsNumber()) {
+        Local<Value> err = makeErrorObj("Second argument must be a number", GETDNS_RETURN_INVALID_PARAMETER);
+        Local<Value> cbArgs[] = { err };
+        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        return;
     }
-    uint16_t type = (uint16_t) args[1]->Uint32Value();
+    uint16_t type = (uint16_t) info[1]->Uint32Value();
 
     // optional third arg is an object
     getdns_dict* extension = NULL;
-    if (args.Length() > 3 && args[2]->IsObject()) {
-        extension = GNUtil::convertToDict(args[2]->ToObject());
+    if (info.Length() > 3 && info[2]->IsObject()) {
+        extension = GNUtil::convertToDict(info[2]->ToObject());
     }
 
     // create callback data
     CallbackData *data = new CallbackData();
-    data->callback = new NanCallback(localCb);
+    data->callback = new Nan::Callback(localCb);
     data->ctx = ctx;
     ctx->Ref();
 
@@ -828,13 +824,13 @@ NAN_METHOD(GNContext::Lookup) {
         data->ctx->Unref();
         delete data;
 
-        Handle<Value> err = makeErrorObj("Error issuing query", r);
-        Handle<Value> cbArgs[] = { err };
-        localCb->Call(NanGetCurrentContext()->Global(), 1, cbArgs);
-        NanReturnUndefined();
+        Local<Value> err = makeErrorObj("Error issuing query", r);
+        Local<Value> cbArgs[] = { err };
+        localCb->Call(Nan::GetCurrentContext()->Global(), 1, cbArgs);
+        return;
     }
     // done.
-    NanReturnValue(GNUtil::convertToBuffer(&transId, 8));
+    info.GetReturnValue().Set(GNUtil::convertToBuffer(&transId, 8));
 }
 
 // Common function to handle getdns_address/service/hostname
@@ -842,39 +838,38 @@ NAN_METHOD(GNContext::HelperLookup) {
     // first argument is a string
     // last argument must be a callback
     // optional argument of extensions
-    NanScope();
     // name, type, and callback are required
-    if (args.Length() < 2) {
-        NanThrowTypeError("At least 2 arguments are required.");
+    if (info.Length() < 2) {
+        Nan::ThrowTypeError("At least 2 arguments are required.");
     }
     // last arg must be a callback
-    Local<Value> last = args[args.Length() - 1];
+    Local<Value> last = info[info.Length() - 1];
     if (!last->IsFunction()) {
-        NanThrowTypeError("Final argument must be a function.");
+        Nan::ThrowTypeError("Final argument must be a function.");
     }
     Local<Function> localCb = Local<Function>::Cast(last);
-    GNContext* ctx = node::ObjectWrap::Unwrap<GNContext>(args.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx || !ctx->context_) {
-        Handle<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
-        Handle<Value> cbArgs[] = { err };
-        localCb->Call(NanGetCurrentContext()->Global(), 1, cbArgs);
-        NanReturnUndefined();
+        Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
+        Local<Value> cbArgs[] = { err };
+        localCb->Call(Nan::GetCurrentContext()->Global(), 1, cbArgs);
+        return;
     }
     // take first arg and make it a string
-    String::Utf8Value name(args[0]->ToString());
+    String::Utf8Value name(info[0]->ToString());
 
     // 2nd arg could be extensions
     // optional third arg is an object
     getdns_dict* extension = NULL;
-    if (args.Length() > 2 && args[1]->IsObject()) {
-        extension = GNUtil::convertToDict(args[1]->ToObject());
+    if (info.Length() > 2 && info[1]->IsObject()) {
+        extension = GNUtil::convertToDict(info[1]->ToObject());
     }
 
     // figure out what called us
-    uint32_t funcType = args.Data()->Uint32Value();
+    uint32_t funcType = info.Data()->Uint32Value();
     // create callback data
     CallbackData *data = new CallbackData();
-    data->callback = new NanCallback(localCb);
+    data->callback = new Nan::Callback(localCb);
     data->ctx = ctx;
     ctx->Ref();
 
@@ -905,13 +900,13 @@ NAN_METHOD(GNContext::HelperLookup) {
         data->ctx->Unref();
         delete data;
 
-        Handle<Value> err = makeErrorObj("Error issuing query", r);
-        Handle<Value> cbArgs[] = { err };
-        localCb->Call(NanGetCurrentContext()->Global(), 1, cbArgs);
-        NanReturnUndefined();
+        Local<Value> err = makeErrorObj("Error issuing query", r);
+        Local<Value> cbArgs[] = { err };
+        localCb->Call(Nan::GetCurrentContext()->Global(), 1, cbArgs);
+        return;
     }
     // done. return as buffer
-    NanReturnValue(GNUtil::convertToBuffer(&transId, 8));
+    info.GetReturnValue().Set(GNUtil::convertToBuffer(&transId, 8));
 }
 
 // Init the module
