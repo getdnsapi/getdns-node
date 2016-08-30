@@ -51,14 +51,16 @@ typedef struct getdns_libuv {
 static void
 getdns_libuv_run(getdns_eventloop *loop)
 {
-    (void) uv_run(((getdns_libuv *)loop)->loop, UV_RUN_DEFAULT);
+    // Do nothing, Node is already running the event loop
+    (void) loop;
 }
 
 static void
 getdns_libuv_run_once(getdns_eventloop *loop, int blocking)
 {
-    (void) uv_run(((getdns_libuv *)loop)->loop,
-        blocking ? UV_RUN_ONCE : UV_RUN_NOWAIT);
+    // Do nothing, Node is already running the event loop
+    (void) loop;
+    (void) blocking;
 }
 
 static void
