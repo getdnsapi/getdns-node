@@ -220,6 +220,7 @@ GNUtil::attachContextToNode(struct getdns_context* context)
     if (r != GETDNS_RETURN_GOOD) {
         return false;
     }
+    // TODO: use the loop from the current Environment
     uv_loop_t* uv_loop = uv_default_loop();
     r = getdns_extension_set_libuv_loop(context, uv_loop);
     return r == GETDNS_RETURN_GOOD;
