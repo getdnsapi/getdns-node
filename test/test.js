@@ -29,7 +29,12 @@ describe("getdns test", function() {
     // requires
     var expect = require('expect.js'),
         getdns = require("../getdns"),
-        async  = require("async");
+        async  = require("async"),
+        segfaultHandler = require("segfault-handler"),
+        segfaultDumpFilename = "crash.log";
+
+    // Dump segfault stacktraces both to the console and to a file.
+    segfaultHandler.registerHandler(segfaultDumpFilename);
 
     // Basic creation w/ various opts
     describe("Context Create", function() {
@@ -249,7 +254,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
         });
 
         it("should return with dnssec_status getdns.DNSSEC_SECURE when not in stub mode", function(done) {
@@ -287,7 +292,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
       });
     });
 
@@ -343,7 +348,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
         });
         it("TLS tls fallback tcp should return successfully", function(done) {
             this.timeout(10000);
@@ -360,7 +365,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
         });
         it("TLS starttls first should return successfully", function(done) {
             this.timeout(10000);
@@ -378,7 +383,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
         });
     });
 
@@ -408,7 +413,7 @@ describe("getdns test", function() {
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
                 finish(ctx, done);
-            }); 
+            });
         });
     });
 
@@ -432,7 +437,7 @@ describe("getdns test", function() {
             });
       });
     });
-    
+
     describe("SUFFIX", function() {
         it("SUFFIX should return successfully", function(done) {
             this.timeout(10000);
@@ -478,7 +483,7 @@ describe("getdns test", function() {
             });
       });
     });
-    
+
     describe("APPENDNAME", function() {
         it("APPENDNAME should return successfully", function(done) {
             this.timeout(10000);
@@ -489,7 +494,7 @@ describe("getdns test", function() {
                     "8.8.8.8"
                 ]
             });
-            ctx.suffix = "org";           
+            ctx.suffix = "org";
 	    ctx.append_name = getdns.APPEND_NAME_ALWAYS; //APPEND_NAME_TO_SINGLE_LABEL_FIRST;
             ctx.general("www.verisignlabs", getdns.RRTYPE_A, {"return_call_reporting" : true}, function(err, result) {
 //                console.log(JSON.stringify(result, null, 2));
@@ -502,4 +507,3 @@ describe("getdns test", function() {
       });
     });
 });
-
