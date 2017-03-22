@@ -320,7 +320,7 @@ static void setSuffixes(getdns_context* context, Local<Value> opt) {
     if (opt->IsString()) {
          Nan::Utf8String suff(opt->ToString());
          setSuffixesHelper(context, (char *)*suff);
-    }  
+    }
 }
 
 #define EXAMPLE_PIN "pin-sha256=\"E9CZ9INDbd+2eRQozYqqbQ2yXLVKB9+xcprMF+44U1g=\""
@@ -334,7 +334,7 @@ static void setPinset(getdns_context* context, Local<Value> opt) {
         getdns_return_t r = GETDNS_RETURN_GOOD;
 
         pubkey_pin = getdns_pubkey_pin_create_from_string(context,
-          (char *)*pin); 
+          (char *)*pin);
         if (pubkey_pin == NULL) {
          fprintf(stderr, "could not convert '%s' into a " \
             "public key pin.\n" \
@@ -356,7 +356,7 @@ static void setPinset(getdns_context* context, Local<Value> opt) {
             getdns_dict_destroy(pubkey_pin);
             pubkey_pin = NULL;
        }
-    }  
+    }
 }
 
 static void setUpstreams(getdns_context* context, Local<Value> opt) {
@@ -370,7 +370,7 @@ static void setUpstreams(getdns_context* context, Local<Value> opt) {
                 // two tuple - first is IP, 2nd is port
                 // optional tuple - TLS Hostname
                 // optional tuple - TSIG name:algorithm:secret
-                // optional tuple - Search Suffix 
+                // optional tuple - Search Suffix
                 Local<Array> tuple = Local<Array>::Cast(ipOrTuple);
                 if (tuple->Length() > 0) {
                     Nan::Utf8String asciiStr(tuple->Get(0)->ToString());
@@ -382,10 +382,10 @@ static void setUpstreams(getdns_context* context, Local<Value> opt) {
                         getdns_dict_set_int(ipDict, "port", port);
                         // TLS hostname or TSIG (TODO: fix to allow this if optional port is not set)
                         Nan::Utf8String asciiBuffer(tuple->Get(2)->ToString());
- 
-                        if (((char *)*asciiBuffer)[0] == '^') { // tsig 
+
+                        if (((char *)*asciiBuffer)[0] == '^') { // tsig
                             tsigHelper(ipDict, *asciiBuffer);
-                        } else if (((char *)*asciiBuffer)[0] == '~') { // suffix 
+                        } else if (((char *)*asciiBuffer)[0] == '~') { // suffix
                             setSuffixesHelper(context, &((char *)*asciiBuffer)[1]);
                         }
                         else {
@@ -395,9 +395,9 @@ static void setUpstreams(getdns_context* context, Local<Value> opt) {
                 }
             } else {
                 Nan::Utf8String asciiStr(ipOrTuple->ToString());
-                if (((char *)*asciiStr)[0] == '^') { // tsig 
+                if (((char *)*asciiStr)[0] == '^') { // tsig
                     tsigHelper(ipDict, *asciiStr);
-                } else if (((char *)*asciiStr)[0] == '~') { // suffix 
+                } else if (((char *)*asciiStr)[0] == '~') { // suffix
                     setSuffixesHelper(context, &((char *)*asciiStr)[1]);
                 }
                 else ipDict = getdns_util_create_ip(*asciiStr);
@@ -477,7 +477,7 @@ static void setDnsRootServers(getdns_context* context, Local<Value> opt)
 
 
 // Read the location of the Trust anchor and pass it to getdns.
-// TODO: actually pass in the trust anchor. 
+// TODO: actually pass in the trust anchor.
 static void setTrustAnchor(getdns_context *context, Local<Value> opt)
 {
     FILE *fh;
