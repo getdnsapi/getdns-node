@@ -1,19 +1,19 @@
 // Sample code to demonstrate the nodejs getdns API usage
 // copied from README
 
-var getdns = require('getdns');
-var options = {
+const getdns = require("getdns");
+const options = {
     // request timeout time in millis
-    timeout : 5000,
-    "upstreams" : [
-        "8.8.8.8"
+    timeout: 5000,
+    "upstreams": [
+        "8.8.8.8",
     ],
     // always return dnssec status
-    return_dnssec_status : true
+    return_dnssec_status: true,
 };
 
 // getdns query callback
-var callback = function(err, result) {
+const callback = function(err, result) {
     // if not null, err is an object w/ msg and code.
     // code maps to a GETDNS_CALLBACK_TYPE
     // result is a response dictionary
@@ -28,12 +28,12 @@ var callback = function(err, result) {
 };
 
 // create the context with the above options
-var context = getdns.createContext(options);
+const context = getdns.createContext(options);
 
 // getdns general
 // third argument may be a dictionary for extensions
 // last argument must be a callback
-var transactionId = context.general("getdnsapi.net", getdns.RRTYPE_A, callback);
+const transactionId = context.general("getdnsapi.net", getdns.RRTYPE_A, callback);
 
 // cancel a request
 // context.cancel(transactionId);
@@ -47,6 +47,6 @@ context.hostname("8.8.8.8", callback);
 // where the value for on / off are normal bools
 //context.getAddress("cnn.com", { return_both_v4_and_v6 : true }, callback);
 
-process.on('exit', function() {
+process.on("exit", function() {
     context.destroy();
 });

@@ -3,47 +3,47 @@
 // @Author Joel Purra
 
 // pull in dependencies
-var getdns = require('getdns');
-var async = require('async');
-var ursa = require('ursa');
-var pem = require('pem');
-var openpgp = require('openpgp');
+const getdns = require("getdns");
+const async = require("async");
+const ursa = require("ursa");
+const pem = require("pem");
+const openpgp = require("openpgp");
 
 // names
-var PGP_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._openpgpkey.getdnsapi.net";
-var PGP_TYPE = 65280;
+const PGP_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._openpgpkey.getdnsapi.net";
+const PGP_TYPE = 65280;
 
-var TLSA_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._smimecert.getdnsapi.org";
-var TLSA_TYPE = getdns.RRTYPE_TLSA;
+const TLSA_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._smimecert.getdnsapi.org";
+const TLSA_TYPE = getdns.RRTYPE_TLSA;
 
 // message
-var MESSAGE = "Hello, World";
+const MESSAGE = "Hello, World";
 
 // context options
-var options = {
-  return_dnssec_status : true,
+const options = {
+    return_dnssec_status: true,
   // request timeout time in millis
-  timeout : 5000
+    timeout: 5000,
 };
 
 // create the context with the above options
-var context = getdns.createContext(options);
+const context = getdns.createContext(options);
 
 // response util - get a secure response of a particular type
-var getFirstSecureResponse = function(result, type) {
-    var replies_tree = result.replies_tree;
+const getFirstSecureResponse = function(result, type) {
+    const replies_tree = result.replies_tree;
     // validate that there is a reply with an answer
-    if (!replies_tree || !replies_tree.length ||
-        !replies_tree[0].answer ||
-        !replies_tree[0].answer.length) {
+    if (!replies_tree || !replies_tree.length
+        || !replies_tree[0].answer
+        || !replies_tree[0].answer.length) {
         return "empty answer list for type " + type;
     }
-    var reply = replies_tree[0];
+    const reply = replies_tree[0];
     // ensure the reply is secure
     if (reply.dnssec_status != getdns.DNSSEC_SECURE) {
         return "insecure reply for type " + type;
     }
-    var answers = reply.answer;
+    let answers = reply.answer;
     // get the records of that type
     answers = answers.filter(function(answer) {
         return answer.type == type;
@@ -54,48 +54,48 @@ var getFirstSecureResponse = function(result, type) {
     return answers[0];
 };
 
-var encryptPgp = function(callback) {
+const encryptPgp = function(callback) {
     context.lookup(PGP_NAME, PGP_TYPE, function(err, result) {
-        if(err){ return callback(err, null); }
-        var record = getFirstSecureResponse(result, PGP_TYPE);
+        if (err) { return callback(err, null); }
+        const record = getFirstSecureResponse(result, PGP_TYPE);
         if (typeof record === "string") {
             // error
             return callback(record, null);
         }
-        var key = record.rdata.rdata_raw;
-        var publicKey = openpgp.key.readArmored(key);
-        var pgpMessage = openpgp.encryptMessage(publicKey.keys, MESSAGE);
+        const key = record.rdata.rdata_raw;
+        const publicKey = openpgp.key.readArmored(key);
+        const pgpMessage = openpgp.encryptMessage(publicKey.keys, MESSAGE);
         return callback(null, pgpMessage);
     });
 };
 
-var derToPem = function(derBuffer) {
-    var base64Encoded = derBuffer.toString('base64');
+const derToPem = function(derBuffer) {
+    const base64Encoded = derBuffer.toString("base64");
     // split
-    var lines = base64Encoded.match(/.{1,63}/g);
+    const lines = base64Encoded.match(/.{1,63}/g);
 
-    var result = ["-----BEGIN CERTIFICATE-----"]
+    const result = ["-----BEGIN CERTIFICATE-----"]
                 .concat(lines)
                 .concat(["-----END CERTIFICATE-----"])
                 .join("\n");
     return result;
 };
 
-var encryptTlsa = function(callback) {
+const encryptTlsa = function(callback) {
     context.lookup(TLSA_NAME, TLSA_TYPE, function(err, result) {
-        if(err){ return callback(err, null); }
-        var record = getFirstSecureResponse(result, TLSA_TYPE);
+        if (err) { return callback(err, null); }
+        const record = getFirstSecureResponse(result, TLSA_TYPE);
         if (typeof record === "string") {
             // error
             return callback(record, null);
         }
         try {
-            var key = record.rdata.certificate_association_data;
-            var pemCert = derToPem(key);
+            const key = record.rdata.certificate_association_data;
+            const pemCert = derToPem(key);
             pem.getPublicKey(pemCert, function(err, result) {
                 if (err) { return callback(err); }
-                var key = ursa.createPublicKey(result.publicKey);
-                callback(null, key.encrypt(MESSAGE).toString('base64'));
+                const key = ursa.createPublicKey(result.publicKey);
+                callback(null, key.encrypt(MESSAGE).toString("base64"));
             });
         } catch (ex) {
             return callback(ex, null);

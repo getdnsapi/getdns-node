@@ -25,16 +25,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var getdns = require("bindings")("getdns");
+const getdns = require("bindings")("getdns");
 
 // export constants directly
 module.exports = getdns.constants;
 
 // wrap context creation
 module.exports.createContext = function(opts) {
-    var ctx = new getdns.Context(opts);
-    var oldDestroyFunc = ctx.destroy;
-    var destroyed = false;
+    const ctx = new getdns.Context(opts);
+    const oldDestroyFunc = ctx.destroy;
+    let destroyed = false;
     ctx.destroy = function() {
         if (destroyed) {
             return false;
@@ -58,7 +58,6 @@ module.exports.createContext = function(opts) {
     ctx.hostname = function() {
         return ctx.getHostname.apply(ctx, arguments);
     };
-
 
     return ctx;
 };
