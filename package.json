@@ -21,8 +21,13 @@
   },
   "devDependencies": {
     "async": "^1.2.0",
+    "eslint": "^3.18.0",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
     "mocha": "^2.2.5",
+    "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.0"
   },
   "engines": {
@@ -31,6 +36,9 @@
   },
   "scripts": {
     "postinstall": "node-gyp clean rebuild",
-    "test": "./node_modules/.bin/mocha"
+    "test": "mocha && npm run --silent lint",
+    "lint": "npm run --silent eslint --",
+    "eslint": "eslint ./src ./test ./samples getdns.js",
+    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js"
   }
 }
