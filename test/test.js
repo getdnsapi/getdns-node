@@ -25,26 +25,31 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-describe("getdns test", function() {
+/* global
+describe:false,
+it:false,
+*/
+
+describe("getdns test", () => {
     // requires
-    let expect = require("expect.js"),
-        getdns = require("../getdns"),
-        async = require("async"),
-        segfaultHandler = require("segfault-handler"),
-        segfaultDumpFilename = "crash.log";
+    const expect = require("expect.js");
+    const getdns = require("../getdns");
+    const async = require("async");
+    const segfaultHandler = require("segfault-handler");
+    const segfaultDumpFilename = "crash.log";
 
     // Dump segfault stacktraces both to the console and to a file.
     segfaultHandler.registerHandler(segfaultDumpFilename);
 
     // Basic creation w/ various opts
-    describe("Context Create", function() {
-        it("should create a default context", function() {
+    describe("Context Create", () => {
+        it("should create a default context", () => {
             const ctx = getdns.createContext();
             expect(ctx).to.be.ok();
             ctx.destroy();
         });
 
-        it("should create a context with options", function() {
+        it("should create a context with options", () => {
             const ctx = getdns.createContext({
                 "stub": true,
                 "upstreams": [
@@ -58,22 +63,22 @@ describe("getdns test", function() {
         });
     });
 
-    const finish = function(ctx, done) {
+    const finish = (ctx, done) => {
         // destroying a context within a callback is not allowed
         expect(ctx.destroy()).to.be.ok();
         expect(ctx.destroy()).to.not.be.ok();
         done();
     };
 
-    describe("Context Query", function() {
+    describe("Context Query", () => {
         it("should get valid results on lookup getdnsapi.net", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.lookup("getdnsapi.net", getdns.RRTYPE_A, function(e, result) {
+            ctx.lookup("getdnsapi.net", getdns.RRTYPE_A, (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.just_address_answers).to.be.an(Array);
                 expect(result.just_address_answers).to.not.be.empty();
-                result.just_address_answers.map(function(r) {
+                result.just_address_answers.map((r) => {
                     expect(r.address_type).to.be.an("string");
                     expect(r.address_data).to.be.an(Buffer);
                 });
@@ -82,7 +87,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on getAddress getdnsapi.net", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.getAddress("getdnsapi.net", function(e, result) {
+            ctx.getAddress("getdnsapi.net", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.just_address_answers).to.be.an(Array);
@@ -92,7 +97,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on getService getdnsapi.net", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.getService("getdnsapi.net", function(e, result) {
+            ctx.getService("getdnsapi.net", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.replies_full).to.be.an(Array);
@@ -102,7 +107,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on getHostname 8.8.8.8", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.getHostname("8.8.8.8", function(e, result) {
+            ctx.getHostname("8.8.8.8", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.replies_full).to.be.an(Array);
@@ -112,7 +117,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on address getdnsapi.net", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.address("getdnsapi.net", function(e, result) {
+            ctx.address("getdnsapi.net", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.just_address_answers).to.be.an(Array);
@@ -122,7 +127,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on service getdnsapi.net", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.service("getdnsapi.net", function(e, result) {
+            ctx.service("getdnsapi.net", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.replies_full).to.be.an(Array);
@@ -132,7 +137,7 @@ describe("getdns test", function() {
         });
         it("should get valid results on hostname 8.8.8.8", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            ctx.hostname("8.8.8.8", function(e, result) {
+            ctx.hostname("8.8.8.8", (e, result) => {
                 expect(e).to.not.be.ok(e);
                 expect(result).to.be.ok();
                 expect(result.replies_full).to.be.an(Array);
@@ -143,12 +148,12 @@ describe("getdns test", function() {
         it("should issue concurrent queries", function(done) {
             const ctx = getdns.createContext({"stub": true});
             const hosts = ["getdnsapi.net", "labs.verisigninc.com", "nlnetlabs.nl"];
-            async.map(hosts, ctx.getAddress.bind(ctx), function(err, result) {
+            async.map(hosts, ctx.getAddress.bind(ctx), (err, result) => {
                 expect(err).to.not.be.ok(err);
                 expect(result).to.be.ok();
                 expect(result).to.be.an(Array);
                 expect(result).to.have.length(hosts.length);
-                result.map(function(r) {
+                result.map((r) => {
                     expect(r.replies_full).to.be.an(Array);
                     expect(r.replies_full).to.not.be.empty();
                 });
@@ -162,7 +167,7 @@ describe("getdns test", function() {
                 "stub": true,
                 "timeout": 1,
             });
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.be.ok();
                 expect(result).to.not.be.ok();
                 expect(err).to.have.property("msg");
@@ -177,7 +182,7 @@ describe("getdns test", function() {
                 "timeout": 1,
             });
             ctx.timeout = 10000;
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.not.be.ok(err);
                 expect(result).to.be.ok();
                 finish(ctx, done);
@@ -187,7 +192,7 @@ describe("getdns test", function() {
         // cancel
         it("should cancel the query", function(done) {
             const ctx = getdns.createContext({"stub": true});
-            const transId = ctx.getAddress("getdnsapi.net", function(err, result) {
+            const transId = ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.be.ok();
                 expect(result).to.not.be.ok();
                 expect(err).to.have.property("msg");
@@ -204,12 +209,12 @@ describe("getdns test", function() {
             const ctx = getdns.createContext({
                 "stub": true,
             });
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.not.be.ok(err);
                 expect(result).to.be.ok();
                 expect(result.replies_full).to.be.an(Array);
                 expect(result.replies_full).to.not.be.empty();
-                result.replies_full.map(function(r) {
+                result.replies_full.map((r) => {
                     expect(r).to.be.an(Buffer);
                 });
                 finish(ctx, done);
@@ -217,7 +222,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("DNSSEC", function() {
+    describe("DNSSEC", () => {
         it("should return with dnssec_status", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -228,11 +233,11 @@ describe("getdns test", function() {
                 ],
             });
 
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
-                result.replies_tree.map(function(reply) {
+                result.replies_tree.map((reply) => {
                     expect(reply).to.have.property("dnssec_status");
                 });
                 finish(ctx, done);
@@ -247,8 +252,8 @@ describe("getdns test", function() {
                     "64.6.64.6",
                 ],
             });
-	    ctx.dns_transport = getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP;
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.dns_transport = getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP;
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -264,9 +269,9 @@ describe("getdns test", function() {
                     "64.6.64.6",
                 ],
             });
-            ctx.getAddress("getdnsapi.net", function(err, result) {
+            ctx.getAddress("getdnsapi.net", (err, result) => {
                 expect(err).to.not.be.ok();
-                result.replies_tree.map(function(reply) {
+                result.replies_tree.map((reply) => {
                     expect(reply).to.have.property("dnssec_status", getdns.DNSSEC_SECURE);
                 });
                 finish(ctx, done);
@@ -274,7 +279,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("TLS", function() {
+    describe("TLS", () => {
         it("TLS should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -284,9 +289,9 @@ describe("getdns test", function() {
                     "185.49.141.38",
                 ],
             });
-	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
-            //ctx.address("getdnsapi.net", function(err, result) {
-            ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+            ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+            //ctx.address("getdnsapi.net", (err, result) => {
+            ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -295,7 +300,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("TLSHostname", function() {
+    describe("TLSHostname", () => {
         it("TLS hostname validation should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -307,7 +312,7 @@ describe("getdns test", function() {
                 ],
             });
 
-            porttls = 853;
+            const porttls = 853;
             const upstreamresolvers = [];
             upstreamresolvers.push("185.49.141.38");
             upstreamresolvers.push(porttls);
@@ -315,12 +320,12 @@ describe("getdns test", function() {
             const up1 = [];
             up1.push(upstreamresolvers);
 
-// create the contexts we need to test with the above options
+            // create the contexts we need to test with the above options
             ctx.upstream_recursive_servers = up1;
 
             ctx.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
             ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
-            ctx.general("getdnsapi.net", getdns.RRTYPE_A, function(err, result) {
+            ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -329,7 +334,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("TLS_vlabs", function() {
+    describe("TLS_vlabs", () => {
         it("TLS only should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -339,8 +344,8 @@ describe("getdns test", function() {
                     "173.255.254.151",
                 ],
             });
-	    ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
-            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+            ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -356,8 +361,8 @@ describe("getdns test", function() {
                     "173.255.254.151",
                 ],
             });
-	    ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
-            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+            ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -373,9 +378,10 @@ describe("getdns test", function() {
                     "173.255.254.151",
                 ],
             });
+
             // todo debug ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
-	    ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
-            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, function(err, result) {
+            ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
+            ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -384,7 +390,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("TSIG", function() {
+    describe("TSIG", () => {
         it("TSIG should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -394,16 +400,17 @@ describe("getdns test", function() {
                     "185.49.141.37", // , 853 , "^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ=="
                 ],
             });
-            port = 53;
+            const port = 53;
             const upstreamresolvers = [];
             upstreamresolvers.push("185.49.141.37");
             upstreamresolvers.push(port);
             upstreamresolvers.push("^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==");
             const up1 = [];
             up1.push(upstreamresolvers);
-// create the contexts we need to test with the above options
+
+            // create the contexts we need to test with the above options
             ctx.upstream_recursive_servers = up1;
-            ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting": true}, function(err, result) {
+            ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, {"return_call_reporting": true}, (err, result) => {
                 expect(result.replies_tree[0].tsig_status).to.be.equal(400);
                 expect(result.call_reporting).to.not.be.empty();
                 expect(err).to.not.be.ok();
@@ -414,7 +421,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("BADDNS", function() {
+    describe("BADDNS", () => {
         it("BADDNS should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -424,7 +431,7 @@ describe("getdns test", function() {
                     "8.8.8.8",
                 ],
             });
-            ctx.general("_443._tcp.www.nlnetlabs.nl", getdns.RRTYPE_TXT, {"add_warning_for_bad_dns": true}, function(err, result) {
+            ctx.general("_443._tcp.www.nlnetlabs.nl", getdns.RRTYPE_TXT, {"add_warning_for_bad_dns": true}, (err, result) => {
                 expect(result.replies_tree[0].bad_dns).to.not.be.empty();
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
@@ -434,7 +441,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("SUFFIX", function() {
+    describe("SUFFIX", () => {
         it("SUFFIX should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -444,7 +451,7 @@ describe("getdns test", function() {
                     "8.8.8.8",
                 ],
             });
-            port = 53;
+            const port = 53;
             const upstreamresolvers = [];
             upstreamresolvers.push("8.8.8.8");
             upstreamresolvers.push(port);
@@ -452,7 +459,7 @@ describe("getdns test", function() {
             const up1 = [];
             up1.push(upstreamresolvers);
             ctx.upstream_recursive_servers = up1;
-            ctx.general("www.verisignlabs", getdns.RRTYPE_A, function(err, result) {
+            ctx.general("www.verisignlabs", getdns.RRTYPE_A, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -461,7 +468,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("ALLSTATUS", function() {
+    describe("ALLSTATUS", () => {
         it("ALLSTATUS should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -471,7 +478,7 @@ describe("getdns test", function() {
                     "8.8.8.8",
                 ],
             });
-            ctx.general("dnssec_failed.org", getdns.RRTYPE_A, {"dnssec_return_all_statuses": true}, function(err, result) {
+            ctx.general("dnssec_failed.org", getdns.RRTYPE_A, {"dnssec_return_all_statuses": true}, (err, result) => {
                 expect(err).to.not.be.ok();
                 expect(result.replies_tree).to.be.an(Array);
                 expect(result.replies_tree).to.not.be.empty();
@@ -480,7 +487,7 @@ describe("getdns test", function() {
         });
     });
 
-    describe("APPENDNAME", function() {
+    describe("APPENDNAME", () => {
         it("APPENDNAME should return successfully", function(done) {
             this.timeout(10000);
             const ctx = getdns.createContext({
@@ -491,9 +498,10 @@ describe("getdns test", function() {
                 ],
             });
             ctx.suffix = "org";
-	    ctx.append_name = getdns.APPEND_NAME_ALWAYS; //APPEND_NAME_TO_SINGLE_LABEL_FIRST;
-            ctx.general("www.verisignlabs", getdns.RRTYPE_A, {"return_call_reporting": true}, function(err, result) {
-//                console.log(JSON.stringify(result, null, 2));
+            // ctx.append_name = getdns.APPEND_NAME_TO_SINGLE_LABEL_FIRST;
+            ctx.append_name = getdns.APPEND_NAME_ALWAYS;
+            ctx.general("www.verisignlabs", getdns.RRTYPE_A, {"return_call_reporting": true}, (err, result) => {
+                // console.log(JSON.stringify(result, null, 2));
                 expect(err).to.not.be.ok();
                 expect(result.call_reporting).to.not.be.empty();
                 expect(result.replies_tree).to.be.an(Array);

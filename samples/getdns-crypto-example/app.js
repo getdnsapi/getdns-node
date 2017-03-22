@@ -30,23 +30,25 @@ const options = {
 const context = getdns.createContext(options);
 
 // response util - get a secure response of a particular type
-const getFirstSecureResponse = function(result, type) {
-    const replies_tree = result.replies_tree;
+const getFirstSecureResponse = (result, type) => {
+    const repliesTree = result.replies_tree;
     // validate that there is a reply with an answer
-    if (!replies_tree || !replies_tree.length
-        || !replies_tree[0].answer
-        || !replies_tree[0].answer.length) {
+    if (!repliesTree || !repliesTree.length
+        || !repliesTree[0].answer
+        || !repliesTree[0].answer.length) {
         return "empty answer list for type " + type;
     }
-    const reply = replies_tree[0];
+    const reply = repliesTree[0];
+
     // ensure the reply is secure
-    if (reply.dnssec_status != getdns.DNSSEC_SECURE) {
+    if (reply.dnssec_status !== getdns.DNSSEC_SECURE) {
         return "insecure reply for type " + type;
     }
     let answers = reply.answer;
+
     // get the records of that type
-    answers = answers.filter(function(answer) {
-        return answer.type == type;
+    answers = answers.filter((answer) => {
+        return answer.type === type;
     });
     if (!answers.length) {
         return "no answers of type " + type;
@@ -54,8 +56,8 @@ const getFirstSecureResponse = function(result, type) {
     return answers[0];
 };
 
-const encryptPgp = function(callback) {
-    context.lookup(PGP_NAME, PGP_TYPE, function(err, result) {
+const encryptPgp = (callback) => {
+    context.lookup(PGP_NAME, PGP_TYPE, (err, result) => {
         if (err) { return callback(err, null); }
         const record = getFirstSecureResponse(result, PGP_TYPE);
         if (typeof record === "string") {
@@ -69,7 +71,7 @@ const encryptPgp = function(callback) {
     });
 };
 
-const derToPem = function(derBuffer) {
+const derToPem = (derBuffer) => {
     const base64Encoded = derBuffer.toString("base64");
     // split
     const lines = base64Encoded.match(/.{1,63}/g);
@@ -81,21 +83,21 @@ const derToPem = function(derBuffer) {
     return result;
 };
 
-const encryptTlsa = function(callback) {
-    context.lookup(TLSA_NAME, TLSA_TYPE, function(err, result) {
-        if (err) { return callback(err, null); }
-        const record = getFirstSecureResponse(result, TLSA_TYPE);
+const encryptTlsa = (callback) => {
+    context.lookup(TLSA_NAME, TLSA_TYPE, (err0, result0) => {
+        if (err0) { return callback(err0, null); }
+        const record = getFirstSecureResponse(result0, TLSA_TYPE);
         if (typeof record === "string") {
             // error
             return callback(record, null);
         }
         try {
-            const key = record.rdata.certificate_association_data;
-            const pemCert = derToPem(key);
-            pem.getPublicKey(pemCert, function(err, result) {
-                if (err) { return callback(err); }
-                const key = ursa.createPublicKey(result.publicKey);
-                callback(null, key.encrypt(MESSAGE).toString("base64"));
+            const key0 = record.rdata.certificate_association_data;
+            const pemCert = derToPem(key0);
+            pem.getPublicKey(pemCert, (err1, result1) => {
+                if (err1) { return callback(err1); }
+                const key1 = ursa.createPublicKey(result1.publicKey);
+                callback(null, key1.encrypt(MESSAGE).toString("base64"));
             });
         } catch (ex) {
             return callback(ex, null);
@@ -104,12 +106,16 @@ const encryptTlsa = function(callback) {
 };
 
 // do both
-async.parallel([ encryptPgp, encryptTlsa ], function(err, result) {
+async.parallel([ encryptPgp, encryptTlsa ], (err, result) => {
     if (err) {
+        /* eslint-disable no-console */
         console.log("An error occurred.. " + JSON.stringify(err));
+        /* eslint-enable no-console */
     } else {
+        /* eslint-disable no-console */
         console.log("PGP : " + result[0]);
         console.log("TLSA : " + result[1]);
+        /* eslint-enable no-console */
     }
     context.destroy();
 });
