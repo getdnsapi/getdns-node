@@ -30,9 +30,9 @@ before_install:
   - make
   - make install
   - cd ..
-  - curl -O https://getdnsapi.net/dist/getdns-1.0.0b2.tar.gz
-  - tar -xf getdns-1.0.0b2.tar.gz
-  - cd getdns-1.0.0b2
+  - curl -O https://getdnsapi.net/releases/getdns-1-0-0/getdns-1.0.0.tar.gz
+  - tar -xf getdns-1.0.0.tar.gz
+  - cd getdns-1.0.0
   - ./configure --with-ssl="$OPENSSL_PREFIX" --with-libunbound="$UNBOUND_PREFIX"
   - make
   - sudo make install
