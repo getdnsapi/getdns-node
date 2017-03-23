@@ -44,7 +44,7 @@ describe("getdns test", () => {
     // Dump segfault stacktraces both to the console and to a file.
     segfaultHandler.registerHandler(segfaultDumpFilename);
 
-    // Basic creation w/ various opts.
+    // Basic creation with various options.
     describe("Context Create", () => {
         it("should create a default context", () => {
             const ctx = getdns.createContext();

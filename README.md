@@ -1,21 +1,28 @@
-getdns-node
-===========
+<p align="center">
+  <a href="https://getdnsapi.net/"><img src="resources/logo/getdns-512x.png" alt="getdns logotype" title="getdns" width="512" height="164" border="0" /></a>
+</p>
+<h1 align="center">
+  <a href="https://github.com/getdnsapi/getdns-node">getdnsapi/getdns-node</a>
+</h1>
+<p align="center">
+  Node.js bindings of <a href="https://getdnsapi.net/">getdns</a>, a modern asynchronous DNS API.
+</p>
+<p align="center">
+  <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
+  <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
+</p>
 
-[![Build Status](https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master)](https://travis-ci.org/getdnsapi/getdns-node)
-
-Node.js bindings for the [getdnsapi](https://getdnsapi.net/) implementation of [getdns](https://getdnsapi.net/documentation/spec/).
 
 
-Installation and Requirements
-=============================
+## Installation and Requirements
 
-- An installation of [getdns 1.0.0](https://getdnsapi.net/) or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
-- `npm install getdns`
+- The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
+- The [Unbound](https://unbound.net/) DNS resolver installed with a trust anchor for DNSSEC validation.
 
-Or to build from source:
-- `npm install -g node-gyp`
-- `node-gyp configure`
-- `node-gyp build`
+```shell
+# In your project directory.
+npm install --save getdns
+```
 
 Aim is to support current Node.js versions, including [long-term support (LTS)](https://github.com/nodejs/LTS).
 
@@ -25,96 +32,78 @@ Aim is to support current Node.js versions, including [long-term support (LTS)](
   - Older versions *might* still work with the `--harmony` flag, but are unsupported.
 
 
-API Examples
-============
+
+## API Examples
 
 ```javascript
 var getdns = require('getdns');
+
 var options = {
-  // option for stub resolver context
+  // Option for stub resolver context.
   stub : true,
-  // upstream recursive servers
+  // Upstream recursive servers.
   upstreams : [
-    "192.168.0.1",
-    ["127.0.0.1", 9053]
+    // Example: Google Public DNS.
+    "8.8.8.8",
+    // Example: Your local DNS server.
+    ["127.0.0.1", 53],
   ],
-  // request timeout time in millis
+  // Request timeout time in milliseconds.
   timeout : 1000,
-  // always return dnssec status
+  // Always return DNSSEC status.
   return_dnssec_status : true
 };
 
-// getdns query callback
+// Getdns query callback.
 var callback = function(err, result) {
-    // if not null, err is an object w/ msg and code.
-    // code maps to a GETDNS_CALLBACK_TYPE
-    // result is a response dictionary
-    // A third argument is also supplied as the transaction id
-    // See below for the format of response
+    // If not null, err is an object with msg and code.
+    // Code maps to a GETDNS_CALLBACK_TYPE.
+    // Result is a response dictionary, see below for the format.
+    // A third argument is also supplied as the transaction id.
 }
 
-// create the context with the above options
+// Create the context with the above options.
 var context = getdns.createContext(options);
 
-// getdns general
-// third argument may be a dictionary for extensions
-// last argument must be a callback
+// Getdns general.
+// Third argument may be a dictionary for extensions.
+// Last argument must be a callback.
 var transactionId = context.lookup("getdnsapi.net", getdns.RRTYPE_A, callback);
 
-// cancel a request
+// Cancel a request.
 context.cancel(transactionId);
 
-// other methods
+// Other methods.
 context.address("getdnsapi.net", callback);
 context.service("getdnsapi.net", callback);
 context.hostname("8.8.8.8", callback);
 
-// extensions are passed as dictionaries
-// where the value for on / off are normal bools
+// Extensions are passed as dictionaries.
+// Where the value for on / off are normal bools.
 context.address("getdnsapi.net", { return_both_v4_and_v6 : true }, callback);
 
-// when done with a context, it must be explicitly destroyed
+// When done with a context, it must be explicitly destroyed.
 context.destroy();
-
-// Setting context properties
-// Context objects support setting properties via similar to the C API.
-// getdns_context_set_timeout(context, 1000) would map to:
-// context.timeout = 1000
-// The following properties are available to set directly and can also
-// be set in the options object passed to the constructor.
-
-// context.resolution_type
-// context.upstream_recursive_servers - use an array of IP Addresses
-// context.timeout
-// context.use_threads
-// context.return_dnssec_status
-// context.dns_transport
-// context.edns_extended_rcode
-// context.edns_version
-// context.edns_do_bit
-// context.limit_outstanding_queries
-// context.edns_maximum_udp_payloadSize
-// context.namespaces
-// context.dns_transport_list
-
-// For backwards compatibility, context.stub and context.upstreams are still supported.
-
 ```
+
 
 ### Context Cleanup
 
-When a context object is garbage collected, the underlying resources are freed up.  However, garbage collection is not guaranteed to trigger.  The application will not exit until all contexts are destroyed.
+When a context object is garbage collected, the underlying resources are freed up. However, garbage collection is not guaranteed to trigger. The application will not exit until all contexts are destroyed.
+
 
 ### Response format
 
 A response to the callback is the JS representation of the `getdns_dict` response dictionary.
 
 Bindatas are converted to strings when possible:
- - getdns IP address dictionary to IP string
- - printable bindata
- - wire format dname
+
+- getdns IP address dictionary to IP string
+- printable bindata
+- wire format dname
 
 All other bindata objects are converted into Node.js buffers (represented below as <node buffer>)
+
 
 ```javascript
 {
@@ -259,27 +248,69 @@ All other bindata objects are converted into Node.js buffers (represented below 
 }
 ```
 
+
 ### Constants
 
-All constants defined in `<getdns/getdns.h>` are exposed in the module.  The GETDNS_ prefix is removed.  As an example, to get filter out only secure replies, one may do something like:
+All constants defined in `<getdns/getdns.h>` are exposed in the module. The GETDNS_ prefix is removed. As an example, to get filter out only secure replies, one may do something like:
 
 ```javascript
-var secured = replies.filter(function(reply) {
+var dnssecSecureReplies = result.replies_tree.filter(function(reply) {
     return reply.dnssec_status == getdns.DNSSEC_SECURE;
 });
-
 ```
 
-Testing
-=======
 
-Mocha is used to test the bindings.
+### Context options
 
-- npm install -g mocha
-- mocha
+```javascript
+// Setting context properties.
+// Context objects support setting properties via similar to the C API.
+// This C function call would map to that JS context property:
+getdns_context_set_timeout(context, 1000)
+context.timeout = 1000
 
-Note that the tests require an Internet connection and a trust anchor to be installed to pass.  Please consult the getdns documentation on the expected location of the trust anchor.  Common locations are:
+// The following properties are available to set directly and can also
+// be set in the options object passed to the constructor.
 
-- /etc/unbound/getdns-root.key
-- ${prefix}/etc/unbound/getdns-root.key
-- ${prefix}/etc/getdns-root.key
+// NOTE: Use an array of IP Addresses.
+context.upstream_recursive_servers
+context.resolution_type
+context.timeout
+context.use_threads
+context.return_dnssec_status
+context.dns_transport
+context.edns_extended_rcode
+context.edns_version
+context.edns_do_bit
+context.limit_outstanding_queries
+context.edns_maximum_udp_payloadSize
+context.namespaces
+context.dns_transport_list
+
+// For backwards compatibility, context.stub and context.upstreams are still supported.
+```
+
+
+
+## Building and testing
+
+Patches are welcome!
+
+```shell
+# In the source directory.
+npm install
+
+# If editing C++ code and headers in in src/ either build or rebuild the module as necessary.
+node-gyp rebuild
+
+# Test against live DNS servers.
+npm run --silent test
+```
+
+Note that the tests require an internet connection, [getdns](https://getdnsapi.net/), and [Unbound with a trust anchor to be installed](https://unbound.net/) to pass. Please consult the getdns documentation on the expected location of the trust anchor.
+
+
+
+---
+
+<a href="https://getdnsapi.net/"><img src="resources/logo/getdns-64x.png" alt="getdns logotype" title="getdns" width="64" height="21" border="0" /></a> [getdnsapi/getdns-node](https://github.com/getdnsapi/getdns-node) Copyright &copy; 2014, 2015, 2016, 2017, Verisign, Inc. All rights reserved. Released under the [BSD 3-clause License](https://opensource.org/licenses/BSD-3-Clause).

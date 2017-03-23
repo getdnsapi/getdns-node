@@ -1,19 +1,24 @@
 {
   "name": "getdns",
   "version": "1.0.0",
-  "description": "getdns bindings for Node.js. Requires getdns 1.0.0 or above.",
+  "description": "getdns bindings for Node.js. getdns is a modern asynchronous DNS API. It implements DNS entry points from a design developed and vetted by application developers, in an API specification.",
   "main": "getdns.js",
   "keywords": [
     "dns",
-    "getdns"
+    "getdns",
+    "getdnsapi",
+    "dnssec"
   ],
   "gypfile": true,
-  "author": {
-    "name": "Neel Goyal and maintained since 0.5.0 by Gowri Visweswaran"
-  },
+  "author": "The getdns team <team@getdnsapi.net> (https://getdnsapi.net/)",
+  "contributors": [
+    "Neel Goyal",
+    "Gowri Visweswaran",
+    "Joel Purra (https://joelpurra.com/)"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/getdnsapi/getdns-node.git"
+    "url": "git+https://github.com/getdnsapi/getdns-node.git"
   },
   "dependencies": {
     "bindings": "^1.2.1",
@@ -27,6 +32,7 @@
     "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
     "mocha": "^2.2.5",
+    "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.0"
   },
@@ -35,10 +41,19 @@
     "npm": "^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "scripts": {
-    "postinstall": "node-gyp clean rebuild",
+    "postinstall": "node-gyp rebuild",
     "test": "mocha && npm run --silent lint",
     "lint": "npm run --silent eslint --",
     "eslint": "eslint ./src ./test ./samples getdns.js",
-    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js"
+    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js",
+    "install": "node-gyp rebuild"
+  },
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/getdnsapi/getdns-node/issues"
+  },
+  "homepage": "https://getdnsapi.net/",
+  "directories": {
+    "test": "test"
   }
 }
