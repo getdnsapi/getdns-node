@@ -47,7 +47,7 @@ const transactionId = context.general("labs.verisigninc.com", getdns.RRTYPE_A, c
 // Cancel a request.
 //context.cancel(transactionId);
 
-process.on("exit", () => {
-    // NOTE: finally destroy the context.
+process.on("beforeExit", () => {
+    // NOTE: remember to explicitly destroy the context after being done with lookups.
     context.destroy();
 });

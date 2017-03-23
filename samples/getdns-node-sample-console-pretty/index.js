@@ -102,9 +102,7 @@ context.address("nlnetlabs.nl", { return_both_v4_and_v6: true }, addressCallback
 context.service("dnssec-name-and-shame.com", serviceCallback);
 context.hostname("8.8.8.8", hostnameCallback);
 
-//context.getAddress("cnn.com", { return_both_v4_and_v6 : true }, callback);
-
-process.on("exit", () => {
-    // NOTE: finally destroy the context.
+process.on("beforeExit", () => {
+    // NOTE: remember to explicitly destroy the context after being done with lookups.
     context.destroy();
 });

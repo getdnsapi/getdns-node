@@ -13,7 +13,6 @@
 </p>
 
 
-
 ## Installation and Requirements
 
 - The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
@@ -35,58 +34,59 @@ Aim is to support current Node.js versions, including [long-term support (LTS)](
 
 ## API Examples
 
-See the `samples/` folder.
+See the `samples/` folder for more.
 
 ```javascript
-var getdns = require('getdns');
+var getdns = require("getdns");
 
 var options = {
-  // Option for stub resolver context.
-  stub : true,
-  // Upstream recursive servers.
-  upstreams : [
-    // Example: Google Public DNS.
-    "8.8.8.8",
-    // Example: Your local DNS server.
-    ["127.0.0.1", 53],
-  ],
-  // Request timeout time in milliseconds.
-  timeout : 1000,
-  // Always return DNSSEC status.
-  return_dnssec_status : true
+    // Option for stub resolver context, deferring lookups to the upstream recursive servers.
+    resolution_type: getdns.RESOLUTION_STUB,
+    // Upstream recursive servers.
+    upstream_recursive_servers: [
+        // Example: Google Public DNS.
+        "8.8.8.8",
+        // Example: Your local DNS server.
+        ["127.0.0.1", 53],
+    ],
+    // Request timeout time in milliseconds.
+    timeout: 1000,
+    // NOTE: optionally enforce DNSSEC security validation.
+    //dnssec_return_only_secure: true,
+    // Always return DNSSEC status.
+    return_dnssec_status: true
 };
 
-// Getdns query callback.
-var callback = function(err, result) {
-    // If not null, err is an object with msg and code.
-    // Code maps to a GETDNS_CALLBACK_TYPE.
-    // Result is a response dictionary, see below for the format.
-    // A third argument is also supplied as the transaction id.
-}
-
-// Create the context with the above options.
+// Contexts can be reused for several lookups, but must be explicitly destroyed.
 var context = getdns.createContext(options);
 
-// Getdns general.
-// Third argument may be a dictionary for extensions.
-// Last argument must be a callback.
-var transactionId = context.lookup("getdnsapi.net", getdns.RRTYPE_A, callback);
+var callback = function(err, result) {
+    if (err) {
+        // If not null, err is an object with msg and code.
+        // Code maps to a getdns.CALLBACK_XXXX (CANCEL, TIMEOUT, ERROR).
+        console.error(err);
+    } else {
+        // Result is a response dictionary, see below for the format.
+        // For context.address() simply use result.just_address_answers.
+        // NOTE: optionally check if each reply is secured with DNSSEC.
+        console.log(result.canonical_name, result.just_address_answers);
+    }
 
-// Cancel a request.
-context.cancel(transactionId);
+    // When done with a context, it must be explicitly destroyed.
+    // Can be done after all lookups/transactions have finished or beforeExit.
+    context.destroy();
+};
 
-// Other methods.
-context.address("getdnsapi.net", callback);
-context.service("getdnsapi.net", callback);
-context.hostname("8.8.8.8", callback);
-
-// Extensions are passed as dictionaries.
-// Where the value for on / off are normal bools.
-context.address("getdnsapi.net", { return_both_v4_and_v6 : true }, callback);
-
-// When done with a context, it must be explicitly destroyed.
-context.destroy();
+// Simple domain name-to-ip address lookup.
+// Always returns both IPv4 and IPv6 results, if available.
+var transactionId = context.address("wikipedia.org", callback);
 ```
+
+
+
+## API usage
+
+Most of the nodejs calls maps to the [getdns API specification](https://getdnsapi.net/documentation/spec/). If there are any differences, or questions about usage, [please open an issue](https://github.com/getdnsapi/getdns-node/issues).
 
 
 ### Context Cleanup
@@ -259,43 +259,161 @@ Also see the output of the examples:
 
 ### Constants
 
-All constants defined in `<getdns/getdns.h>` are exposed in the module. The GETDNS_ prefix is removed. As an example, to get filter out only secure replies, one may do something like:
+All constants defined in `<getdns/getdns.h>` are exposed in the module. The `GETDNS_` prefix is removed. As an example, to get/filter out only secure replies, one may do something like:
 
 ```javascript
 var dnssecSecureReplies = result.replies_tree.filter(function(reply) {
-    return reply.dnssec_status == getdns.DNSSEC_SECURE;
+    return reply.dnssec_status === getdns.DNSSEC_SECURE;
 });
+```
+
+
+### Context functions
+
+Most work is done in the [async methods](https://getdnsapi.net/documentation/spec/#1-the-getdns-async-functions) of a [DNS context](https://getdnsapi.net/documentation/spec/#16-setting-up-the-dns-context). [Extensions](https://getdnsapi.net/documentation/spec/#3-extensions) are optional in the below method calls.
+
+```javascript
+// See also https://getdnsapi.net/documentation/spec/
+
+// Contexts can be reused for several lookups, but must be explicitly destroyed.
+// See context options below.
+var context = getdns.createContext(options);
+
+// When done with a context, it must be explicitly destroyed.
+// Can be done after all lookups/transactions have finished or beforeExit.
+context.destroy();
+
+// Cancel a request before the callback has been called.
+context.cancel(transactionId);
+
+// Method parameter formats.
+var domainName = "subdomain.example.org";
+var ipAddress = "111.222.33.44";
+var ipAddress = "2620:0:862:ed1a::1";
+
+// https://getdnsapi.net/documentation/spec/#3-extensions
+// Extensions are optional in the below method calls.
+var extensions = {
+  dnssec_return_only_secure: true
+};
+
+// There are 80+ predefined `RRTYPE_XXXX` constants.
+// Examples: A, AAAA, CNAME, MX, TXT, TLSA, SSHFP, OPENPGPKEY, ...
+var request_type = getdns.RRTYPE_MX;
+var request_type = getdns.RRTYPE_SSHFP;
+
+function callback(err, result, transactionId) {
+  // err is either null (good result) or an object: { msg: "...", code: getdns.CALLBACK_XXXX (CANCEL, TIMEOUT, ERROR) }
+  // result is null (bad result) or an object with the response dictionary format shown elsewhere in this documentation.
+  // transactionId matches the one given when the lookup was initialized.
+}
+
+// For looking up any type of DNS record.
+var transactionId = context.general(domainName, request_type, extensions, callback);
+
+// For doing getaddrinfo()-like address lookups.
+// Always returns both IPv4 and IPv6 results, if available.
+var transactionId = context.address(domainName, extensions, callback);
+
+// For getting results from SRV lookups.
+var transactionId = context.service(domainName, extensions, callback);
+
+// For doing getnameinfo()-like name lookups.
+var transactionId = context.hostname(ipAddress, extensions, callback);
 ```
 
 
 ### Context options
 
+The below [DNS context options](https://getdnsapi.net/documentation/spec/#8-dns-contexts) are not complete; not all from the specification are listed, nor are all implemented in getdns-node. If there are any differences, or questions about usage, [please open an issue](https://github.com/getdnsapi/getdns-node/issues).
+
 ```javascript
 // Setting context properties.
-// Context objects support setting properties via similar to the C API.
-// This C function call would map to that JS context property:
-getdns_context_set_timeout(context, 1000)
-context.timeout = 1000
-
+// See also https://getdnsapi.net/documentation/spec/
 // The following properties are available to set directly and can also
 // be set in the options object passed to the constructor.
+//
+// Context objects support setting properties via similar to the C API.
+// Example: this C function call would map to that JS context property:
+getdns_context_set_timeout(context, 1000);
+context.timeout = 1000;
 
-// NOTE: Use an array of IP Addresses.
-context.upstream_recursive_servers
-context.resolution_type
-context.timeout
-context.use_threads
-context.return_dnssec_status
-context.dns_transport
-context.edns_extended_rcode
-context.edns_version
-context.edns_do_bit
-context.limit_outstanding_queries
-context.edns_maximum_udp_payloadSize
-context.namespaces
-context.dns_transport_list
+// Switch DNS resolution/lookup mode:
+//   - Recursive: all lookups performed locally directly to relevant nameservers.
+//   - Stub: all lookups deferred to upstream resolvers.
+// For backwards compatibility the deprecated context.stub is still supported.
+context.resolution_type = getdns.RESOLUTION_RECURSING;
+context.resolution_type = getdns.RESOLUTION_STUB;
 
-// For backwards compatibility, context.stub and context.upstreams are still supported.
+// If acting as a stub resolver, provide an array of DNS servers:
+//   - IP addresses as strings (assuming DNS port is 53).
+//   - An array with an IP address as a string and a port number as an integer.
+// For backwards compatibility the deprecated context.upstreams is still supported.
+context.upstream_recursive_servers = [
+  // Example: Google Public DNS.
+  "8.8.8.8",
+  // Example: Your local DNS server.
+  ["127.0.0.1", 53],
+];
+
+// If acting as recursive resolver, enable or disable following CNAME/DNAME redirects.
+context.follow_redirects = getdns.REDIRECTS_FOLLOW;
+context.follow_redirects = getdns.REDIRECTS_DO_NOT_FOLLOW;
+
+// Integer in milliseconds. The default is undefined.
+context.timeout = 1000;
+
+// Boolean. Switch between thread or forking mode in the underlying libunbound.
+context.use_threads = false;
+
+// Enable looking up DNSSEC status of each response.
+// The status is stored in each result.replies_tree[...].dnssec_status with
+// values from getdns.DNSSEC_XXXX (SECURE, BOGUS, INDETERMINATE, INSECURE, NOT_PERFORMED).
+context.return_dnssec_status = true;
+
+// DNS uses UDP by default, but can use TCP or TLS as well.
+// Values from getdns.TRANSPORT_XXXX (UDP_FIRST_AND_FALL_BACK_TO_TCP, UDP_ONLY, TCP_ONLY, TCP_ONLY_KEEP_CONNECTIONS_OPEN, TLS_ONLY_KEEP_CONNECTIONS_OPEN, TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN, UDP, TCP, TLS).
+context.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
+
+// The transports array contains an ordered list of transports that will be used for DNS lookups.
+// Values from getdns.TRANSPORT_XXXX (UDP, TCP, TLS)
+// The default is a list containing getdns.TRANSPORT_UDP then getdns.TRANSPORT_TCP.
+context.dns_transport_list = [
+  getdns.TRANSPORT_TLS,
+  getdns.TRANSPORT_TCP,
+  getdns.TRANSPORT_UDP
+]
+
+// Specifies number of milliseconds the API will leave an idle TCP or TLS connection open for.
+// Idle means no outstanding responses and no pending queries. The default is 0.
+context.idle_timeout = ...;
+
+// Related to  Extension mechanisms for DNS (EDNS).
+// The value is between 0 and 255; the default is 0.
+context.edns_extended_rcode = 0;
+
+// The value is between 0 and 255; the default is 0.
+context.edns_version = 0;
+
+// The value is between 0 and 1; the default is 0.
+context.edns_do_bit = 0;
+
+// The value is between 512 and 65535; when not set, outgoing values will adhere to the suggestions in RFC 6891 and may follow a scheme that uses multiple values to maximize receptivity..
+context.edns_maximum_udp_payloadSize = ...;
+
+// Specifies limit the number of outstanding DNS queries.
+// The API will block itself from sending more queries if it is about to exceed this value, and instead keep those queries in an internal queue.
+// The a value of 0 indicates that the number of outstanding DNS queries is unlimited.
+context.limit_outstanding_queries = ...;
+
+// The namespaces array contains an ordered list of namespaces that will be queried.
+// Important: this context setting is ignored for the context.general() function; it is used for the other functions.
+// Values from getdns.NAMESPACE_XXXX (DNS, LOCALNAMES, NETBIOS, MDNS, NIS).
+// The default is determined by the OS.
+context.namespaces = [
+  getdns.NAMESPACE_XXXX,
+  getdns.NAMESPACE_XXXX
+];
 ```
 
 
@@ -312,10 +430,11 @@ npm install
 node-gyp rebuild
 
 # Test against live DNS servers.
+# NOTE: some tests may fail intermittently, depending on internet connection and upstream DNS servers. Rerun to verify.
 npm run --silent test
 ```
 
-Note that the tests require an internet connection, [getdns](https://getdnsapi.net/), and [Unbound with a trust anchor to be installed](https://unbound.net/) to pass. Please consult the getdns documentation on the expected location of the trust anchor.
+Note that the tests require an internet connection, [getdns](https://getdnsapi.net/), and [Unbound with a trust anchor to be installed](https://unbound.net/) to pass. Please consult the getdns documentation on the expected location of the trust anchor. Because of testing over the internet against live DNS servers, some tests may fail intermittently. If so, rerun to verify.
 
 
 
