@@ -4,6 +4,8 @@
 // Run from browser using the following example url:
 // http://localhost:50000/resolverinfo?resolver=185.49.141.38&query=getdnsapi.net&hostname=getdnsapi.net
 
+"use strict";
+
 const express = require("express");
 const app = express();
 const getdns = require("getdns");

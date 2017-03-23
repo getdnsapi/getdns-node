@@ -3,19 +3,27 @@ getdns-node
 
 [![Build Status](https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master)](https://travis-ci.org/getdnsapi/getdns-node)
 
-Node.js bindings for the [getdnsapi](http://getdnsapi.net) implementation of [getdns](http://vpnc.org/getdns-api/).
+Node.js bindings for the [getdnsapi](https://getdnsapi.net/) implementation of [getdns](https://getdnsapi.net/documentation/spec/).
 
 
 Installation and Requirements
 =============================
 
-- An installation of getdns 1.0 or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
-- `npm install getdns` 
+- An installation of [getdns 1.0.0](https://getdnsapi.net/) or later is required.  Please see the [getdnsapi](https://github.com/getdnsapi/getdns) GitHub.
+- `npm install getdns`
 
 Or to build from source:
 - `npm install -g node-gyp`
 - `node-gyp configure`
 - `node-gyp build`
+
+Aim is to support current Node.js versions, including [long-term support (LTS)](https://github.com/nodejs/LTS).
+
+  - v7.x.x
+  - v6.x.x
+  - v4.x.x
+  - Older versions *might* still work with the `--harmony` flag, but are unsupported.
+
 
 API Examples
 ============

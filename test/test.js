@@ -30,6 +30,8 @@ describe:false,
 it:false,
 */
 
+"use strict";
+
 // Requires.
 const expect = require("expect.js");
 const getdns = require("../");

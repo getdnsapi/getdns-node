@@ -1,6 +1,8 @@
 // Sample code to demonstrate the nodejs getdns API usage
 // copied from README
 
+"use strict";
+
 // NOTE: here using a relative path to getdns for testing purposes.
 //const getdns = require("getdns");
 const getdns = require("../");

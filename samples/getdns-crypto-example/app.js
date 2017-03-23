@@ -2,6 +2,8 @@
 // @Author Neel Goyal
 // @Author Joel Purra
 
+"use strict";
+
 // Pull in dependencies.
 const getdns = require("getdns");
 const async = require("async");
