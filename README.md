@@ -35,6 +35,8 @@ Aim is to support current Node.js versions, including [long-term support (LTS)](
 
 ## API Examples
 
+See the `samples/` folder.
+
 ```javascript
 var getdns = require('getdns');
 
@@ -103,6 +105,12 @@ Bindatas are converted to strings when possible:
 - wire format dname
 
 All other bindata objects are converted into Node.js buffers (represented below as <node buffer>)
+
+Also see the output of the examples:
+
+- `node samples/example-raw.js`
+- `samples/getdns-console-pretty/`
+- `samples/getdns-resolver-check-tls/`
 
 
 ```javascript

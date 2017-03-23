@@ -1,0 +1,16 @@
+{
+  "name": "getdns-sample-console-pretty",
+  "version": "1.0.0",
+  "description": "Sample to demonstrate executing several lookups, extracting some result variables and printing them to the console -- with colors!",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "getdns": "file:../../",
+    "chalk": "^1.1.3",
+    "json-colorz": "^0.2.7"
+  },
+  "author": "The getdns team <team@getdnsapi.net> (https://getdnsapi.net/)",
+  "license": "BSD-3-Clause"
+}
