@@ -1,7 +1,10 @@
 // Sample code to demonstrate the nodejs getdns API usage
 // copied from README
 
-const getdns = require("getdns");
+// NOTE: here using a relative path to getdns for testing purposes.
+//const getdns = require("getdns");
+const getdns = require("../");
+
 const options = {
     // request timeout time in millis
     timeout: 5000,

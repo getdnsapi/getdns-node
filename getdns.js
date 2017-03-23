@@ -27,14 +27,15 @@
 
 const getdns = require("bindings")("getdns");
 
-// export constants directly
+// Export constants directly.
 module.exports = getdns.constants;
 
-// wrap context creation
+// Wrap context creation.
 module.exports.createContext = function(opts) {
     const ctx = new getdns.Context(opts);
     const oldDestroyFunc = ctx.destroy;
     let destroyed = false;
+
     ctx.destroy = function() {
         if (destroyed) {
             return false;
@@ -45,16 +46,20 @@ module.exports.createContext = function(opts) {
         });
         return true;
     };
-    // add the wrappers for more consistent getdns API
+
+    // Add the wrappers for more consistent getdns API.
     ctx.general = function() {
         return ctx.lookup.apply(ctx, arguments);
     };
+
     ctx.address = function() {
         return ctx.getAddress.apply(ctx, arguments);
     };
+
     ctx.service = function() {
         return ctx.getService.apply(ctx, arguments);
     };
+
     ctx.hostname = function() {
         return ctx.getHostname.apply(ctx, arguments);
     };

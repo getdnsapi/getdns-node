@@ -2,37 +2,39 @@
 // @Author Neel Goyal
 // @Author Joel Purra
 
-// pull in dependencies
+// Pull in dependencies.
 const getdns = require("getdns");
 const async = require("async");
 const ursa = require("ursa");
 const pem = require("pem");
 const openpgp = require("openpgp");
 
-// names
+openpgp.initWorker({ path: "openpgp.worker.js" });
+
+// Names.
 const PGP_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._openpgpkey.getdnsapi.net";
 const PGP_TYPE = 65280;
 
 const TLSA_NAME = "77fa5113ab6a532ce2e6901f3bd3351c0db5845e0b1b5fb09907808d._smimecert.getdnsapi.org";
 const TLSA_TYPE = getdns.RRTYPE_TLSA;
 
-// message
+// Message.
 const MESSAGE = "Hello, World";
 
-// context options
+// Context options.
 const options = {
     return_dnssec_status: true,
-  // request timeout time in millis
+  // Request timeout time in millis.
     timeout: 5000,
 };
 
-// create the context with the above options
+// Create the context with the above options.
 const context = getdns.createContext(options);
 
-// response util - get a secure response of a particular type
+// Response util - get a secure response of a particular type.
 const getFirstSecureResponse = (result, type) => {
     const repliesTree = result.replies_tree;
-    // validate that there is a reply with an answer
+    // Validate that there is a reply with an answer.
     if (!repliesTree || !repliesTree.length
         || !repliesTree[0].answer
         || !repliesTree[0].answer.length) {
@@ -40,13 +42,13 @@ const getFirstSecureResponse = (result, type) => {
     }
     const reply = repliesTree[0];
 
-    // ensure the reply is secure
+    // Ensure the reply is secure.
     if (reply.dnssec_status !== getdns.DNSSEC_SECURE) {
         return "insecure reply for type " + type;
     }
     let answers = reply.answer;
 
-    // get the records of that type
+    // Get the records of that type.
     answers = answers.filter((answer) => {
         return answer.type === type;
     });
@@ -61,19 +63,29 @@ const encryptPgp = (callback) => {
         if (err) { return callback(err, null); }
         const record = getFirstSecureResponse(result, PGP_TYPE);
         if (typeof record === "string") {
-            // error
+            // Error.
             return callback(record, null);
         }
-        const key = record.rdata.rdata_raw;
-        const publicKey = openpgp.key.readArmored(key);
-        const pgpMessage = openpgp.encryptMessage(publicKey.keys, MESSAGE);
-        return callback(null, pgpMessage);
+        const pubkey = record.rdata.rdata_raw;
+
+        const openpgpEncryptOptions = {
+            data: MESSAGE,
+            publicKeys: openpgp.key.readArmored(pubkey).keys,
+        };
+
+        openpgp.encrypt(openpgpEncryptOptions)
+            .then(function(ciphertext) {
+                const pgpMessage = ciphertext.data;
+
+                return callback(null, pgpMessage);
+            })
+            .catch((error) => callback(error, null));
     });
 };
 
 const derToPem = (derBuffer) => {
     const base64Encoded = derBuffer.toString("base64");
-    // split
+    // Split.
     const lines = base64Encoded.match(/.{1,63}/g);
 
     const result = ["-----BEGIN CERTIFICATE-----"]
@@ -88,7 +100,7 @@ const encryptTlsa = (callback) => {
         if (err0) { return callback(err0, null); }
         const record = getFirstSecureResponse(result0, TLSA_TYPE);
         if (typeof record === "string") {
-            // error
+            // Error.
             return callback(record, null);
         }
         try {
@@ -105,7 +117,7 @@ const encryptTlsa = (callback) => {
     });
 };
 
-// do both
+// Do both.
 async.parallel([ encryptPgp, encryptTlsa ], (err, result) => {
     if (err) {
         /* eslint-disable no-console */
