@@ -355,7 +355,7 @@ char* getdns_dict_to_ip_string(getdns_dict* dict) {
     if (r != GETDNS_RETURN_GOOD) {
         return NULL;
     }
-    if (data->size == 5 &&
+    if (data->size == 4 &&
         (strcmp("IPv4", (char*) data->data) == 0 ||
          strcmp("IPv6", (char*) data->data) == 0)) {
         r = getdns_dict_get_bindata(dict, "address_data", &data);

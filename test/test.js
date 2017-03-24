@@ -33,6 +33,7 @@ it:false,
 "use strict";
 
 // Requires.
+const net = require("net");
 const expect = require("expect.js");
 const getdns = require("../");
 const async = require("async");
@@ -83,9 +84,9 @@ describe("getdns test", () => {
                 expect(result).to.be.ok();
                 expect(result.just_address_answers).to.be.an(Array);
                 expect(result.just_address_answers).to.not.be.empty();
-                result.just_address_answers.map((r) => {
-                    expect(r.address_type).to.be.an("string");
-                    expect(r.address_data).to.be.an(Buffer);
+                result.just_address_answers.map((address) => {
+                    expect(address).to.be.an("string");
+                    expect(net.isIP(address)).to.be.ok();
                 });
                 finish(ctx, done);
             });

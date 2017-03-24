@@ -133,7 +133,7 @@ Bindatas are converted to strings when possible:
 - printable bindata
 - wire format dname
 
-All other bindata objects are converted into Node.js buffers (represented below as <node buffer>)
+All other bindata objects are converted into Node.js buffers (represented below as `<node buffer>`)
 
 Also see the output of the examples:
 
