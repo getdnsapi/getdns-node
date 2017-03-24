@@ -503,26 +503,6 @@ describe("getdns test", () => {
         });
     });
 
-    describe("ALLSTATUS", () => {
-        it("ALLSTATUS should return successfully", function(done) {
-            this.timeout(10000);
-            const ctx = getdns.createContext({
-                "stub": true,
-                "return_dnssec_status": true,
-                "upstreams": [
-                    "8.8.8.8",
-                ],
-            });
-
-            ctx.general("dnssec_failed.org", getdns.RRTYPE_A, {"dnssec_return_all_statuses": true}, (err, result) => {
-                expect(err).to.not.be.ok();
-                expect(result.replies_tree).to.be.an(Array);
-                expect(result.replies_tree).to.not.be.empty();
-                finish(ctx, done);
-            });
-        });
-    });
-
     describe("APPENDNAME", () => {
         it("APPENDNAME should return successfully", function(done) {
             this.timeout(10000);
