@@ -13,6 +13,31 @@
 </p>
 
 
+
+## Features
+
+getdns-node has a few advantages over the [default DNS module in Node.js](https://nodejs.org/docs/latest/api/dns.html).
+
+- DNS lookup security with [Domain Name System Security Extensions
+ (DNSSEC)](https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions) signature validation.
+- Supports [all DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) with constants for 80+ (`A`, `AAAA`, `MX`, `TXT`, `SSHFP`, `OPENPGPKEY`, ...).
+- Configure as local recursive DNS server, or stub mode with upstream DNS resolvers.
+- Perform both IPv4 and IPv6 lookups in a single call.
+- Configure to perform lookups over TLS, TCP, or UDP, with fallbacks and long-lived connections.
+- Configure to explicitly follow or explicitly not follow `CNAME` and `DNAME` redirects.
+- Securely verify DNS-based security records such as
+  - [DNS-based Authentication of Named Entities (DANE)](https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities)
+    - [TLSA certificate association](https://en.wikipedia.org/wiki/List_of_DNS_record_types#TLSA) for [XMPP](https://tools.ietf.org/html/rfc7712), [SMTP](https://tools.ietf.org/html/rfc7672), [IMAP](https://tools.ietf.org/html/rfc7673#appendix-A.1), POP3, etcetera.
+    - [Public key association/binding for OpenPGP (OPENPGPKEY)](https://tools.ietf.org/html/rfc7929)
+    - [Certificate association/binding for S/MIME](https://tools.ietf.org/html/draft-ietf-dane-smime)
+  - [IPsec Keying Material (IPSECKEY)](https://tools.ietf.org/html/rfc4025)
+  - Email, anti-spoofing and anti-spam
+    - [Domain-based Message Authentication, Reporting and Conformance (DMARC)](https://en.wikipedia.org/wiki/DMARC)
+    - [Sender Policy Framework (SPF)](https://en.wikipedia.org/wiki/Sender_Policy_Framework)
+    - [DomainKeys Identified Mail (DKIM)](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail)
+  - [SSH Public Key Fingerprint (SSHFP)](https://en.wikipedia.org/wiki/SSHFP_Resource_Record)
+
+
 ## Installation and Requirements
 
 - The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).

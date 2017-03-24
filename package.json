@@ -25,13 +25,13 @@
     "nan": "^2.4.0"
   },
   "devDependencies": {
-    "async": "^2.1.5",
+    "async": "^1.2.0",
     "eslint": "^3.18.0",
     "eslint-config-standard": "^6.2.1",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
-    "mocha": "^3.2.0",
+    "mocha": "^2.2.5",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.0"
