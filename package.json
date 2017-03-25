@@ -32,6 +32,7 @@
     "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
     "mocha": "^3.2.0",
+    "mocha-parallel-tests": "^1.2.7",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.0"
@@ -42,7 +43,8 @@
   },
   "scripts": {
     "postinstall": "node-gyp rebuild",
-    "test": "mocha && npm run --silent lint",
+    "test": "npm run --silent mocha && npm run --silent lint",
+    "mocha": "mocha-parallel-tests --slow 500 --timeout 10000 test/",
     "lint": "npm run --silent eslint --",
     "eslint": "eslint ./src ./test ./samples getdns.js",
     "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js",
