@@ -8,6 +8,12 @@
 //const getdns = require("getdns");
 const getdns = require("../");
 
+// Usage: node example-raw.js [hostname] [record type]
+// Usage: node example-raw.js hostname.example.com AAAA
+const hostname = process.argv[2] || "labs.verisigninc.com";
+const recordTypeCode = process.argv[3] || "A";
+const recordType = getdns["RRTYPE_" + recordTypeCode.toUpperCase()];
+
 const options = {
     // Request timeout time in milliseconds.
     timeout: 5000,
@@ -41,7 +47,7 @@ const context = getdns.createContext(options);
 // Last argument must be a callback.
 // Returns a transaction id, which may be used to cancel the request.
 /* eslint-disable no-unused-vars */
-const transactionId = context.general("labs.verisigninc.com", getdns.RRTYPE_A, callback);
+const transactionId = context.general(hostname, recordType, callback);
 /* eslint-disable no-unused-vars */
 
 // Cancel a request.
