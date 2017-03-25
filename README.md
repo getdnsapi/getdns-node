@@ -445,7 +445,7 @@ context.namespaces = [
 
 ## Building and testing
 
-Patches are welcome!
+Development follows [git-flow](http://danielkummer.github.io/git-flow-cheatsheet/) using the AVH edition of [`git flow`](https://github.com/petervanderdoes/gitflow-avh). Patches are welcome!
 
 ```shell
 # In the source directory.
@@ -454,7 +454,11 @@ npm install
 # If editing C++ code and headers in in src/ either build or rebuild the module as necessary.
 node-gyp rebuild
 
-# Test against live DNS servers.
+# Please add tests for any changes. See if there is a specific file matching your change, or create a new.
+# NOTE: you can run tests per file..
+npm run --silent test:run -- test/dnssec.js
+
+# Run all tests against live DNS servers. The build server will also run these.
 # NOTE: some tests may fail intermittently, depending on internet connection and upstream DNS servers. Rerun to verify.
 npm run --silent test
 ```
