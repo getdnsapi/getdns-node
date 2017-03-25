@@ -8,7 +8,7 @@
   Node.js bindings of <a href="https://getdnsapi.net/">getdns</a>, a modern asynchronous DNS API.
 </p>
 <p align="center">
-  <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
+  <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node">Github</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
   <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
 </p>
 
@@ -38,6 +38,7 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
   - [SSH Public Key Fingerprint (SSHFP)](https://en.wikipedia.org/wiki/SSHFP_Resource_Record)
 
 
+
 ## Installation and Requirements
 
 - The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
@@ -59,7 +60,14 @@ Aim is to support current Node.js versions, including [long-term support (LTS)](
 
 ## API Examples
 
-See the `samples/` folder for more.
+See the [`samples/`](samples/) folder for more.
+
+- [`samples/example-raw.js`](samples/example-raw.js)
+  - `node samples/example-raw.js [hostname] [record type]`
+  - `node samples/example-raw.js wikipedia.org TXT`
+- [samples/getdns-console-pretty/](samples/getdns-console-pretty/)
+- [samples/getdns-resolver-check-tls/](samples/getdns-resolver-check-tls/)
+- [samples/getdns-node-sample-resolver-check-tls/](samples/getdns-node-sample-resolver-check-tls/)
 
 ```javascript
 var getdns = require("getdns");
@@ -125,21 +133,15 @@ When a context object is garbage collected, the underlying resources are freed u
 
 ### Response format
 
-A response to the callback is the JS representation of the `getdns_dict` response dictionary.
+A response to the callback is the javascript object representation of the `getdns_dict` response dictionary.
 
-Bindatas are converted to strings when possible:
+Any `bindata` objects are converted into Node.js buffers, or converted to strings when possible:
 
-- getdns IP address dictionary to IP string
-- printable bindata
-- wire format dname
+- Getdns IP address dictionary to IP string.
+- Printable bindata.
+- Wire format dname.
 
-All other bindata objects are converted into Node.js buffers (represented below as `<node buffer>`)
-
-Also see the output of the examples:
-
-- `node samples/example-raw.js`
-- `samples/getdns-console-pretty/`
-- `samples/getdns-resolver-check-tls/`
+In the sample below buffers are represented as `<Buffer length nnnn>`. Some lines have been removed; `<Removed lines nnnn>`. Also see the output of the examples for reference.
 
 
 ```javascript
@@ -147,71 +149,27 @@ Also see the output of the examples:
   "answer_type": 800,
   "canonical_name": "getdnsapi.net.",
   "just_address_answers": [
-    "213.154.224.149",
-    "2001:7b8:206:1:b0ef:31::"
+    "2a04:b900:0:100::37",
+    "185.49.141.37"
   ],
   "replies_full": [
-    "<node buffer>", "<node buffer>"
+    "<Buffer length 677>",
+    "<Buffer length 677>"
   ],
   "replies_tree": [
     {
       "additional": [
-
+        "<Removed lines 39>"
       ],
       "answer": [
         {
           "class": 1,
           "name": "getdnsapi.net.",
           "rdata": {
-            "ipv4_address": "213.154.224.149",
-            "rdata_raw": "<node buffer>"
+            "ipv6_address": "2a04:b900:0:100::37",
+            "rdata_raw": "<Buffer length 16>"
           },
-          "ttl": 120,
-          "type": 1
-        }
-      ],
-      "answer_type": 800,
-      "authority": [
-
-      ],
-      "canonical_name": "getdnsapi.net.",
-      "dnssec_status": 403,
-      "header": {
-        "aa": 0,
-        "ad": 0,
-        "ancount": 1,
-        "arcount": 0,
-        "cd": 0,
-        "id": 0,
-        "nscount": 0,
-        "opcode": 0,
-        "qdcount": 1,
-        "qr": 1,
-        "ra": 1,
-        "rcode": 0,
-        "rd": 1,
-        "tc": 0,
-        "z": 0
-      },
-      "question": {
-        "qclass": 1,
-        "qname": "getdnsapi.net.",
-        "qtype": 1
-      }
-    },
-    {
-      "additional": [
-
-      ],
-      "answer": [
-        {
-          "class": 1,
-          "name": "getdnsapi.net.",
-          "rdata": {
-            "ipv6_address": "2001:7b8:206:1:b0ef:31::",
-            "rdata_raw": "<node buffer>"
-          },
-          "ttl": 120,
+          "ttl": 450,
           "type": 28
         },
         {
@@ -219,52 +177,34 @@ Also see the output of the examples:
           "name": "getdnsapi.net.",
           "rdata": {
             "algorithm": 7,
-            "key_tag": 5508,
+            "key_tag": 32852,
             "labels": 2,
             "original_ttl": 450,
-            "rdata_raw": "<node buffer>",
-            "signature": "<node buffer>",
-            "signature_expiration": 1395047438,
-            "signature_inception": 1393850787,
+            "rdata_raw": "<Buffer length 161>",
+            "signature": "<Buffer length 128>",
+            "signature_expiration": 1491862518,
+            "signature_inception": 1490027744,
             "signers_name": "getdnsapi.net.",
             "type_covered": 28
           },
-          "ttl": 120,
-          "type": 46
-        },
-        {
-          "class": 1,
-          "name": "getdnsapi.net.",
-          "rdata": {
-            "algorithm": 8,
-            "key_tag": 123,
-            "labels": 2,
-            "original_ttl": 450,
-            "rdata_raw": "<node buffer>",
-            "signature": "<node buffer>",
-            "signature_expiration": 1395117010,
-            "signature_inception": 1393907439,
-            "signers_name": "getdnsapi.net.",
-            "type_covered": 28
-          },
-          "ttl": 120,
+          "ttl": 450,
           "type": 46
         }
       ],
       "answer_type": 800,
       "authority": [
-
+        "<Removed lines 48>"
       ],
       "canonical_name": "getdnsapi.net.",
-      "dnssec_status": 403,
+      "dnssec_status": 400,
       "header": {
         "aa": 0,
-        "ad": 0,
-        "ancount": 3,
-        "arcount": 0,
+        "ad": 1,
+        "ancount": 2,
+        "arcount": 3,
         "cd": 0,
         "id": 0,
-        "nscount": 0,
+        "nscount": 4,
         "opcode": 0,
         "qdcount": 1,
         "qr": 1,
@@ -278,6 +218,39 @@ Also see the output of the examples:
         "qclass": 1,
         "qname": "getdnsapi.net.",
         "qtype": 28
+      }
+    },
+    {
+      "additional": [
+        "<Removed lines 69>"
+      ],
+      "answer_type": 800,
+      "authority": [
+        "<Removed lines 48>"
+      ],
+      "canonical_name": "getdnsapi.net.",
+      "dnssec_status": 400,
+      "header": {
+        "aa": 0,
+        "ad": 1,
+        "ancount": 2,
+        "arcount": 3,
+        "cd": 0,
+        "id": 0,
+        "nscount": 4,
+        "opcode": 0,
+        "qdcount": 1,
+        "qr": 1,
+        "ra": 1,
+        "rcode": 0,
+        "rd": 1,
+        "tc": 0,
+        "z": 0
+      },
+      "question": {
+        "qclass": 1,
+        "qname": "getdnsapi.net.",
+        "qtype": 1
       }
     }
   ],
