@@ -105,7 +105,7 @@ const finish = (ctx, done) => {
 
 describe("Context Query with old/hidden API functions", () => {
     it("Should get valid results on lookup getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.lookup("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
@@ -121,7 +121,7 @@ describe("Context Query with old/hidden API functions", () => {
     });
 
     it("Should get valid results on getAddress getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.getAddress("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
@@ -137,7 +137,7 @@ describe("Context Query with old/hidden API functions", () => {
     });
 
     it("Should get valid results on getService getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.getService("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
@@ -149,7 +149,7 @@ describe("Context Query with old/hidden API functions", () => {
     });
 
     it("Should get valid results on getHostname 8.8.8.8", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.getHostname("8.8.8.8", (err, result) => {
             expect(err).to.be(null);
@@ -163,7 +163,7 @@ describe("Context Query with old/hidden API functions", () => {
 
 describe("Context Query with public API functions", () => {
     it("Should get valid results on general getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
@@ -179,7 +179,7 @@ describe("Context Query with public API functions", () => {
     });
 
     it("Should get valid results on address getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
@@ -195,7 +195,7 @@ describe("Context Query with public API functions", () => {
     });
 
     it("Should get valid results on service getdnsapi.net", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.service("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
@@ -207,7 +207,7 @@ describe("Context Query with public API functions", () => {
     });
 
     it("Should get valid results on hostname 8.8.8.8", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
 
         ctx.hostname("8.8.8.8", (err, result) => {
             expect(err).to.be(null);
@@ -221,7 +221,7 @@ describe("Context Query with public API functions", () => {
 
 describe("Concurrent queries", () => {
     it("Should issue concurrent queries", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext();
         const hosts = ["getdnsapi.net", "labs.verisigninc.com", "nlnetlabs.nl"];
 
         async.map(hosts, ctx.address.bind(ctx), (err, result) => {
@@ -271,7 +271,10 @@ describe("Timeouts", () => {
 
 describe("Cancelled queries", () => {
     it("Should cancel the query", function(done) {
-        const ctx = getdns.createContext({resolution_type: getdns.RESOLUTION_STUB});
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+        });
+
         const transId = ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be.an("object");
             expect(result).to.be(null);
@@ -288,9 +291,7 @@ describe("Cancelled queries", () => {
 
 describe("Response/result types", () => {
     it("Should have a buffer as rdata_raw", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-        });
+        const ctx = getdns.createContext();
 
         ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
@@ -308,11 +309,7 @@ describe("Response/result types", () => {
 describe("DNSSEC", () => {
     it("Should return with dnssec_status", function(done) {
         const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
             return_dnssec_status: true,
-            upstream_recursive_servers: [
-                "8.8.8.8",
-            ],
         });
 
         ctx.address("getdnsapi.net", (err, result) => {
@@ -329,10 +326,10 @@ describe("DNSSEC", () => {
     it("Should return with dnssec_status getdns.DNSSEC_SECURE when in stub mode fallback", function(done) {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
-            return_dnssec_status: true,
             upstream_recursive_servers: [
                 "64.6.64.6",
             ],
+            return_dnssec_status: true,
         });
 
         ctx.dns_transport = getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP;
@@ -348,9 +345,6 @@ describe("DNSSEC", () => {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_RECURSING,
             return_dnssec_status: true,
-            upstream_recursive_servers: [
-                "64.6.64.6",
-            ],
         });
 
         ctx.address("getdnsapi.net", (err, result) => {
@@ -365,12 +359,7 @@ describe("DNSSEC", () => {
 
 describe("TLS", () => {
     it("Should return successfully", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "185.49.141.38",
-            ],
-        });
+        const ctx = getdns.createContext();
 
         ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
         //ctx.address("getdnsapi.net", (err, result) => {
@@ -446,12 +435,7 @@ describe("TLS", () => {
     });
 
     it("STARTTLS first should return successfully", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "173.255.254.151",
-            ],
-        });
+        const ctx = getdns.createContext();
 
         // TODO DEBUG.
         //ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
@@ -496,12 +480,7 @@ describe("TSIG", () => {
 
 describe("BADDNS", () => {
     it("Should return successfully", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "8.8.8.8",
-            ],
-        });
+        const ctx = getdns.createContext();
 
         const recordType = getdns.RRTYPE_TXT;
         const extensions = {
@@ -520,12 +499,7 @@ describe("BADDNS", () => {
 
 describe("SUFFIX", () => {
     it("Should return successfully", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "8.8.8.8",
-            ],
-        });
+        const ctx = getdns.createContext();
 
         const port = 53;
         const upstreamresolvers = [];
@@ -548,11 +522,7 @@ describe("SUFFIX", () => {
 describe("ALLSTATUS", () => {
     it("Should return successfully", function(done) {
         const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
             return_dnssec_status: true,
-            upstream_recursive_servers: [
-                "8.8.8.8",
-            ],
         });
 
         const recordType = getdns.RRTYPE_A;
@@ -571,12 +541,7 @@ describe("ALLSTATUS", () => {
 
 describe("APPENDNAME", () => {
     it("APPEND_NAME_ALWAYS should return successfully", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "8.8.8.8",
-            ],
-        });
+        const ctx = getdns.createContext();
 
         ctx.suffix = "org";
         ctx.append_name = getdns.APPEND_NAME_ALWAYS;
