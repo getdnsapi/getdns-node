@@ -220,22 +220,108 @@ describe("Context Query with public API functions", () => {
 });
 
 describe("Concurrent queries", () => {
+    const hosts = [
+        "getdnsapi.net",
+        "labs.verisigninc.com",
+        "nlnetlabs.nl",
+        "dnssec-name-and-shame.com",
+        "nlnet.nl",
+        "labs.verisigninc.com",
+        "verisigninc.com",
+        "iis.se",
+        "www.kirei.se",
+        "www.opendnssec.org",
+        "www.ietf.org",
+        "internetsociety.org",
+    ];
+
     it("Should issue concurrent queries", function(done) {
         const ctx = getdns.createContext();
-        const hosts = ["getdnsapi.net", "labs.verisigninc.com", "nlnetlabs.nl"];
 
-        async.map(hosts, ctx.address.bind(ctx), (err, result) => {
-            expect(err).to.be(null);
-            expect(result).to.be.an("object");
-            expect(result).to.be.an(Array);
-            expect(result).to.have.length(hosts.length);
-            result.map((r) => {
-                expect(r.replies_full).to.be.an(Array);
-                expect(r.replies_full).to.not.be.empty();
-            });
+        async.map(
+            hosts,
+            (host, lookupCallback) => ctx.general(host, getdns.RRTYPE_A, lookupCallback),
+            (err, result) => {
+                expect(err).to.be(null);
+                expect(result).to.be.an("object");
+                expect(result).to.be.an(Array);
+                expect(result).to.have.length(hosts.length);
+                result.map((r) => {
+                    expect(r.replies_full).to.be.an(Array);
+                    expect(r.replies_full).to.not.be.empty();
+                });
 
-            finish(ctx, done);
-        });
+                finish(ctx, done);
+            }
+        );
+    });
+
+    it("Should issue queries from concurrent contexts", function(done) {
+        let ctx = null;
+
+        async.map(
+            hosts,
+            (host, lookupCallback) => {
+                ctx = getdns.createContext();
+                return ctx.general(host, getdns.RRTYPE_A, lookupCallback);
+            },
+            (err, result) => {
+                expect(err).to.be(null);
+                expect(result).to.be.an("object");
+                expect(result).to.be.an(Array);
+                expect(result).to.have.length(hosts.length);
+                result.map((r) => {
+                    expect(r.replies_full).to.be.an(Array);
+                    expect(r.replies_full).to.not.be.empty();
+                });
+
+                finish(ctx, done);
+            }
+        );
+    });
+
+    it("Should issue concurrent queries from concurrent contexts", function(done) {
+        const concurrentContexts = 3;
+        const concurrentContextsArray = Array.from(new Array(concurrentContexts)).map((/* eslint-disable no-unused-vars */value/* eslint-enable no-unused-vars */, index) => index);
+
+        async.map(
+            concurrentContextsArray,
+            (/* eslint-disable no-unused-vars */concurrentContextIndex/* eslint-enable no-unused-vars */, contextCallback) => {
+                let ctx = null;
+
+                async.map(
+                    hosts,
+                    (host, lookupCallback) => {
+                        ctx = getdns.createContext({
+                            // NOTE: lower than the test timeout.
+                            timeout: 9000,
+                        });
+
+                        return ctx.general(host, getdns.RRTYPE_A, lookupCallback);
+                    },
+                    (err, result) => {
+                        expect(err).to.be(null);
+                        expect(result).to.be.an("object");
+                        expect(result).to.be.an(Array);
+                        expect(result).to.have.length(hosts.length);
+                        result.map((r) => {
+                            expect(r.replies_full).to.be.an(Array);
+                            expect(r.replies_full).to.not.be.empty();
+                        });
+
+                        finish(ctx, contextCallback);
+                    }
+                );
+            },
+            (err, result) => {
+                expect(err).to.be(null);
+                expect(result).to.be.an("object");
+                expect(result).to.be.an(Array);
+                expect(result).to.have.length(concurrentContexts);
+
+                done();
+            }
+        );
     });
 });
 
