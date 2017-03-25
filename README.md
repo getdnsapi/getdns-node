@@ -261,7 +261,7 @@ In the sample below buffers are represented as `<Buffer length nnnn>`. Some line
 
 ### Constants
 
-All constants defined in `<getdns/getdns.h>` are exposed in the module. The `GETDNS_` prefix is removed. As an example, to get/filter out only secure replies, one may do something like:
+All constants defined in [`<getdns/getdns.h>`](https://www.getdnsapi.net/doxygen/1.0.0/getdns_8h.html) and [`<getdns/getdns_extra.h>`](https://www.getdnsapi.net/doxygen/1.0.0/getdns__extra_8h.html) are exposed in the module. The `GETDNS_` prefix is removed. As an example, to get/filter out only secure replies, one may do something like:
 
 ```javascript
 var dnssecSecureReplies = result.replies_tree.filter(function(reply) {
