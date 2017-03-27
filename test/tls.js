@@ -41,10 +41,10 @@ shared.initialize();
 
 describe("TLS", () => {
     it("Should return successfully", function(done) {
-        const ctx = getdns.createContext();
+        const ctx = getdns.createContext({
+            dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
+        });
 
-        ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
-        //ctx.address("getdnsapi.net", (err, result) => {
         ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
@@ -57,23 +57,16 @@ describe("TLS", () => {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
             upstream_recursive_servers: [
-                "185.49.141.38", // 853, "getdnsapi.net"
+                [
+                    "185.49.141.38",
+                    853,
+                    "getdnsapi.net",
+                ],
             ],
+            tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
+            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
         });
 
-        const porttls = 853;
-        const upstreamresolvers = [];
-        upstreamresolvers.push("185.49.141.38");
-        upstreamresolvers.push(porttls);
-        upstreamresolvers.push("getdnsapi.net");
-        const up1 = [];
-        up1.push(upstreamresolvers);
-
-        // Create the contexts we need to test with the above options.
-        ctx.upstream_recursive_servers = up1;
-
-        ctx.tls_authentication = getdns.AUTHENTICATION_HOSTNAME;
-        ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
         ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
@@ -88,9 +81,9 @@ describe("TLS", () => {
             upstream_recursive_servers: [
                 "173.255.254.151",
             ],
+            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
         });
 
-        ctx.dns_transport = getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN;
         ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
@@ -105,9 +98,9 @@ describe("TLS", () => {
             upstream_recursive_servers: [
                 "173.255.254.151",
             ],
+            dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
         });
 
-        ctx.dns_transport = getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
         ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
@@ -117,11 +110,12 @@ describe("TLS", () => {
     });
 
     it("STARTTLS first should return successfully", function(done) {
-        const ctx = getdns.createContext();
+        const ctx = getdns.createContext({
+            // TODO DEBUG.
+            // dns_transport: getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
+            dns_transport: getdns.TRANSPORT_TCP_ONLY,
+        });
 
-        // TODO DEBUG.
-        //ctx.dns_transport = getdns.TRANSPORT_STARTTLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN;
-        ctx.dns_transport = getdns.TRANSPORT_TCP_ONLY;
         ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);

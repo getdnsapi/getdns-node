@@ -89,7 +89,7 @@ describe("DNSSEC", () => {
         });
     });
 
-    it("Should return successfully", function(done) {
+    it("Should return all statuses successfully for bad DNSSEC", function(done) {
         const ctx = getdns.createContext({
             return_dnssec_status: true,
         });
@@ -100,6 +100,42 @@ describe("DNSSEC", () => {
         };
 
         ctx.general("dnssec-failed.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should return all statuses successfully for bogus DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_TXT;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("bogus.nlnetlabs.nl", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should return all statuses successfully for good DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("internetsociety.org", recordType, extensions, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
