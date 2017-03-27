@@ -39,29 +39,42 @@ const shared = require("./shared");
 shared.initialize();
 
 describe("TSIG", () => {
-    it("Should return successfully", function(done) {
+    it("Should return tsig_status", function(done) {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
             upstream_recursive_servers: [
-                "185.49.141.37", // 853 , "^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ=="
+                [
+                    "185.49.141.37",
+                    53,
+                    "^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==",
+                ],
             ],
         });
 
-        const port = 53;
-        const upstreamresolvers = [];
-        upstreamresolvers.push("185.49.141.37");
-        upstreamresolvers.push(port);
-        upstreamresolvers.push("^hmac-md5.tsigs.getdnsapi.net:16G69OTeXW6xSQ==");
-        const up1 = [];
-        up1.push(upstreamresolvers);
-
-        // Create the contexts we need to test with the above options.
-        ctx.upstream_recursive_servers = up1;
         ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
+
+            // TODO: constants for TSIG status?
             expect(result.replies_tree[0].tsig_status).to.be.equal(400);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("With bad signature should return no results", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+            upstream_recursive_servers: [
+                // NOTE: bad signature.
+                ["185.49.141.37", 53, "^hmac-md5.tsigs.getdnsapi.net:00000000000000=="],
+            ],
+        });
+
+        ctx.general("getdnsapi.net", getdns.RRTYPE_SOA, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.be.empty();
             shared.destroyContext(ctx, done);
         });
     });

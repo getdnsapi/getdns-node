@@ -167,4 +167,6 @@ describe("Cancelled queries", () => {
 
         expect(transId).to.be.ok();
     });
+
+    // TODO: test issuing multiple queries, and canceling some.
 });

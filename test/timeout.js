@@ -50,6 +50,7 @@ describe("Timeouts", () => {
             expect(result).to.be(null);
             expect(err).to.have.property("msg");
             expect(err).to.have.property("code");
+            expect(err.code).to.be(getdns.CALLBACK_TIMEOUT);
             shared.destroyContext(ctx, done);
         });
     });
@@ -63,6 +64,8 @@ describe("Timeouts", () => {
         ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
             expect(result).to.be.an("object");
+            expect(result.replies_full).to.be.an(Array);
+            expect(result.replies_full).to.not.be.empty();
             shared.destroyContext(ctx, done);
         });
     });

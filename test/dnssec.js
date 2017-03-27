@@ -39,6 +39,21 @@ const shared = require("./shared");
 shared.initialize();
 
 describe("DNSSEC", () => {
+    it("Should throw for bad return_dnssec_status", () => {
+        expect(() => {
+            getdns.createContext({
+                return_dnssec_status: { "bad object": "bad object" },
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("return_dnssec_status");
+        });
+    });
+
     it("Should return with dnssec_status", function(done) {
         const ctx = getdns.createContext({
             return_dnssec_status: true,
@@ -55,6 +70,22 @@ describe("DNSSEC", () => {
         });
     });
 
+    it("Should not return dnssec_status if disabled", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: false,
+        });
+
+        ctx.address("getdnsapi.net", (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.not.have.property("dnssec_status");
+            });
+            shared.destroyContext(ctx, done);
+        });
+    });
+
     it("Should return with dnssec_status getdns.DNSSEC_SECURE when in stub mode fallback", function(done) {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
@@ -64,11 +95,15 @@ describe("DNSSEC", () => {
             return_dnssec_status: true,
         });
 
-        ctx.dns_transport = getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP;
         ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_SECURE);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
             shared.destroyContext(ctx, done);
         });
     });
@@ -81,14 +116,39 @@ describe("DNSSEC", () => {
 
         ctx.address("getdnsapi.net", (err, result) => {
             expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
             result.replies_tree.map((reply) => {
                 expect(reply).to.have.property("dnssec_status", getdns.DNSSEC_SECURE);
             });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
             shared.destroyContext(ctx, done);
         });
     });
+});
 
-    it("Should return successfully", function(done) {
+describe("DNSSEC dnssec_return_all_statuses", () => {
+    it("Should throw for bad return_dnssec_status", function(done) {
+        const ctx = getdns.createContext();
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: "bad value",
+        };
+
+        ctx.general("getdnsapi.net", recordType, extensions, (err, result) => {
+            expect(err).to.not.be(null);
+            expect(err).to.be.an("object");
+            expect(err.msg).to.be.an("string");
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_EXTENSION_MISFORMAT);
+            shared.destroyContext(ctx, done);
+        });
+    });
+});
+
+describe("DNSSEC dnssec_return_all_statuses bad", () => {
+    it("Should have dnssec_status for bad DNSSEC", function(done) {
         const ctx = getdns.createContext({
             return_dnssec_status: true,
         });
@@ -102,6 +162,194 @@ describe("DNSSEC", () => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+            });
+
+            // TODO: verify.
+            // expect(result.status).to.be(getdns.RESPSTATUS_);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should return no dnssec_status for bad DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: false,
+        };
+
+        ctx.general("dnssec-failed.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.be.empty();
+
+            // TODO: verify.
+            // expect(result.status).to.be(getdns.RESPSTATUS_);
+            shared.destroyContext(ctx, done);
+        });
+    });
+});
+
+describe("DNSSEC dnssec_return_all_statuses bogus", () => {
+    it("Should have dnssec_status for bogus DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_TXT;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("bogus.nlnetlabs.nl", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_BOGUS);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should have dnssec_status for bogus DNSSEC without return_dnssec_status", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: false,
+        });
+
+        const recordType = getdns.RRTYPE_TXT;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("bogus.nlnetlabs.nl", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_BOGUS);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should return no replies for bogus DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_TXT;
+        const extensions = {
+            dnssec_return_all_statuses: false,
+        };
+
+        ctx.general("bogus.nlnetlabs.nl", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.be.empty();
+            expect(result.status).to.be(getdns.RESPSTATUS_NO_NAME);
+            shared.destroyContext(ctx, done);
+        });
+    });
+});
+
+describe("DNSSEC dnssec_return_all_statuses good", () => {
+    it("Should have dnssec_status for good DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("internetsociety.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_SECURE);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should have dnssec_status for good DNSSEC without return_dnssec_status", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: false,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("internetsociety.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_SECURE);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should always return dnssec_status for good DNSSEC", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: false,
+        };
+
+        ctx.general("internetsociety.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_SECURE);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("Should return only good DNSSEC dnssec_status", function(done) {
+        const ctx = getdns.createContext({
+            return_dnssec_status: true,
+        });
+
+        const recordType = getdns.RRTYPE_A;
+        const extensions = {
+            dnssec_return_all_statuses: true,
+        };
+
+        ctx.general("internetsociety.org", recordType, extensions, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            result.replies_tree.map((reply) => {
+                expect(reply).to.have.property("dnssec_status");
+                expect(reply.dnssec_status).to.be(getdns.DNSSEC_SECURE);
+            });
+            expect(result.status).to.be(getdns.RESPSTATUS_GOOD);
             shared.destroyContext(ctx, done);
         });
     });

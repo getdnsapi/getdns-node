@@ -38,36 +38,40 @@ const shared = require("./shared");
 
 shared.initialize();
 
-describe("SUFFIX", () => {
-    it("Should return successfully", function(done) {
-        const ctx = getdns.createContext();
-
-        const port = 53;
-        const upstreamresolvers = [];
-        upstreamresolvers.push("8.8.8.8");
-        upstreamresolvers.push(port);
-        upstreamresolvers.push("~getdnsapi.net,net");
-        const up1 = [];
-        up1.push(upstreamresolvers);
-        ctx.upstream_recursive_servers = up1;
+describe("Suffix", () => {
+    it("Should return replies", function(done) {
+        const ctx = getdns.createContext({
+            upstream_recursive_servers: [
+                [
+                    "8.8.8.8",
+                    53,
+                    "~getdnsapi.net,net",
+                ],
+            ],
+        });
 
         ctx.general("www.verisignlabs", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
+
+            // TODO: check for example result.canonical_name.
             shared.destroyContext(ctx, done);
         });
     });
 
-    it("APPEND_NAME_ALWAYS should return successfully", function(done) {
-        const ctx = getdns.createContext();
+    it("APPEND_NAME_ALWAYS should return replies", function(done) {
+        const ctx = getdns.createContext({
+            suffix: "org",
+            append_name: getdns.APPEND_NAME_ALWAYS,
+        });
 
-        ctx.suffix = "org";
-        ctx.append_name = getdns.APPEND_NAME_ALWAYS;
         ctx.general("www.verisignlabs", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
+
+            // TODO: check for example result.canonical_name.
             shared.destroyContext(ctx, done);
         });
     });

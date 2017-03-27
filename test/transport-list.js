@@ -38,11 +38,11 @@ const shared = require("./shared");
 
 shared.initialize();
 
-describe("BADDNS", () => {
-    it("Should throw for bad add_warning_for_bad_dns", () => {
+describe("Transport list", () => {
+    it("Bad extension value dns_transport_list", () => {
         expect(() => {
             getdns.createContext({
-                add_warning_for_bad_dns: "some string value",
+                dns_transport_list: { "bad object": "bad object" },
             });
         }).to.throwException((err) => {
             expect(err).to.be.an("object");
@@ -50,59 +50,92 @@ describe("BADDNS", () => {
             expect(err.code).to.be.an("number");
             expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
             expect(err.message).to.be.an("string");
-            expect(err.message).to.be("add_warning_for_bad_dns");
+            expect(err.message).to.be("dns_transport_list");
         });
     });
 
-    it("Should return bad_dns", function(done) {
-        const ctx = getdns.createContext();
+    it("UDP", function(done) {
+        const ctx = getdns.createContext({
+            dns_transport_list: [
+                getdns.TRANSPORT_UDP,
+            ],
+        });
 
-        const recordType = getdns.RRTYPE_TXT;
-        const extensions = {
-            add_warning_for_bad_dns: true,
-        };
-
-        ctx.general("_443._tcp.www.nlnetlabs.nl", recordType, extensions, (err, result) => {
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
-            result.replies_tree.forEach((reply) => {
-                expect(reply).to.be.an("object");
-                expect(reply).to.not.be(null);
-                expect(reply.bad_dns).to.be.an(Array);
-                expect(reply.bad_dns).to.not.be.empty();
-                const badDnsReplies = reply.bad_dns.filter((badDns) => {
-                    const badDnsValus = [
-                        getdns.BAD_DNS_CNAME_IN_TARGET,
-                        getdns.BAD_DNS_ALL_NUMERIC_LABEL,
-                        getdns.BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE,
-                    ];
-
-                    return badDnsValus.includes(badDns);
-                });
-                expect(badDnsReplies.length).to.be(reply.bad_dns.length);
-            });
             shared.destroyContext(ctx, done);
         });
     });
 
-    it("Should not return bad_dns if disabled", function(done) {
-        const ctx = getdns.createContext();
+    it("TCP", function(done) {
+        const ctx = getdns.createContext({
+            dns_transport_list: [
+                getdns.TRANSPORT_TCP,
+            ],
+        });
 
-        const recordType = getdns.RRTYPE_TXT;
-        const extensions = {
-            add_warning_for_bad_dns: false,
-        };
-
-        ctx.general("_443._tcp.www.nlnetlabs.nl", recordType, extensions, (err, result) => {
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
             expect(err).to.be(null);
             expect(result.replies_tree).to.be.an(Array);
             expect(result.replies_tree).to.not.be.empty();
-            result.replies_tree.forEach((reply) => {
-                expect(reply).to.be.an("object");
-                expect(reply).to.not.be(null);
-                expect(reply.bad_dns).to.not.be.ok();
-            });
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("TLS", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+            upstream_recursive_servers: [
+                [
+                    "185.49.141.38",
+                    853,
+                    "getdnsapi.net",
+                ],
+            ],
+            dns_transport_list: [
+                getdns.TRANSPORT_TLS,
+            ],
+        });
+
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("TLS in resolve mode should fail", function(done) {
+        const ctx = getdns.createContext({
+            dns_transport_list: [
+                getdns.TRANSPORT_TLS,
+            ],
+        });
+
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
+            expect(err).to.be.an("object");
+            expect(result).to.be(undefined);
+            expect(err).to.have.property("msg");
+            expect(err).to.have.property("code");
+            expect(err.code).to.be(getdns.RETURN_BAD_CONTEXT);
+            shared.destroyContext(ctx, done);
+        });
+    });
+
+    it("TLS in resolve mode should with UDP fallback should work", function(done) {
+        const ctx = getdns.createContext({
+            dns_transport_list: [
+                getdns.TRANSPORT_TLS,
+                getdns.TRANSPORT_UDP,
+            ],
+        });
+
+        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
             shared.destroyContext(ctx, done);
         });
     });
