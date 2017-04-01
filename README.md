@@ -41,20 +41,18 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
 
 ## Installation and Requirements
 
-- The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
-- The [Unbound](https://unbound.net/) DNS resolver installed with a trust anchor for DNSSEC validation.
+- [Node.js](https://nodejs.org/) **v7.x.x**, **v6.x.x**, **v4.x.x**; current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
+- [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
+  - [Unbound](https://unbound.net/) DNS resolver **v1.4.16** or later, installed with a trust anchor for DNSSEC validation.
+  - [OpenSSL](https://www.openssl.org/) **v1.0.2** or later.
 
 ```shell
 # In your project directory.
 npm install --save getdns
 ```
 
-Aim is to support current Node.js versions, including [long-term support (LTS)](https://github.com/nodejs/LTS).
-
-  - v7.x.x
-  - v6.x.x
-  - v4.x.x
-  - Older versions *might* still work with the `--harmony` flag, but are unsupported.
+- Older versions/combinations of dependencies *may* be supported in the special `support/` branches. Support branches contain minimal patches to get that particular combination running — quite possibly with a restricted set of features. They are not actively maintained, and may be rebased if required.
+- Older Node.js versions *might* still work with the `--harmony` flag, but are unsupported.
 
 
 
