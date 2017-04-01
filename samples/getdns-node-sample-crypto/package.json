@@ -1,0 +1,18 @@
+{
+  "name": "getdns-sample-crypto",
+  "version": "1.0.0",
+  "description": "Sample use of getdns and crypto records.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "async": "^2.1.5",
+    "getdns": "file:../../",
+    "openpgp": "^2.5.1",
+    "pem": "^1.9.4",
+    "ursa": "^0.9.4"
+  },
+  "author": "The getdns team <team@getdnsapi.net> (https://getdnsapi.net/)",
+  "license": "BSD-3-Clause"
+}

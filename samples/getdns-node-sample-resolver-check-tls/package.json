@@ -1,0 +1,15 @@
+{
+  "name": "getdns-sample-resolver-check-tls",
+  "version": "1.0.0",
+  "description": "Sample to demonstrate the usage of TLS authentication in the getdns nodejs API and host it in an express web context.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.15.2",
+    "getdns": "file:../../"
+  },
+  "author": "The getdns team <team@getdnsapi.net> (https://getdnsapi.net/)",
+  "license": "BSD-3-Clause"
+}
