@@ -61,6 +61,12 @@ static Local<Value> makeErrorObj(const char* msg, int code) {
     return obj;
 }
 
+static Local<Value> makeTypeErrorWithCode(const char* msg, int code) {
+    Local<Object> error = Nan::TypeError(Nan::New<String>(msg).ToLocalChecked()).As<Object>();
+    error->Set(Nan::New<String>("code").ToLocalChecked(), Nan::New<Integer>(code));
+    return error;
+}
+
 // Helper to create an address dictionary from string
 // Must be freed by the user
 static getdns_dict* getdns_util_create_ip(const char* ip) {
@@ -110,28 +116,34 @@ static getdns_dict* getdns_util_create_ip(const char* ip) {
 typedef getdns_return_t (*getdns_context_uint8_t_setter)(getdns_context*, uint8_t);
 typedef getdns_return_t (*getdns_context_uint16_t_setter)(getdns_context*, uint16_t);
 
-static void setTransport(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setTransport(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_dns_transport(context, (getdns_transport_t) num);
+        getdns_return_t r = getdns_context_set_dns_transport(context, (getdns_transport_t) num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setRedirects(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setRedirects(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_follow_redirects(context, (getdns_redirects_t) num);
+        getdns_return_t r = getdns_context_set_follow_redirects(context, (getdns_redirects_t) num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setTlsAuthentication(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setTlsAuthentication(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_tls_authentication(context, (getdns_tls_authentication_t) num);
+        getdns_return_t r = getdns_context_set_tls_authentication(context, (getdns_tls_authentication_t) num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setTransportList(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setTransportList(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
         Local<Array> transportList = Local<Array>::Cast(opt);
         uint32_t numTransports = transportList->Length();
@@ -142,13 +154,15 @@ static void setTransportList(getdns_context* context, Local<Value> opt) {
             transports[i] = (getdns_transport_list_t) transport;
         }
         // set it
-        getdns_context_set_dns_transport_list(context, numTransports, transports);
+        getdns_return_t r = getdns_context_set_dns_transport_list(context, numTransports, transports);
         // free up memory
         delete[] transports;
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setNamespaceList(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setNamespaceList(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
         Local<Array> namespaceList = Local<Array>::Cast(opt);
         uint32_t numNamespaces = namespaceList->Length();
@@ -159,33 +173,40 @@ static void setNamespaceList(getdns_context* context, Local<Value> opt) {
             namespaces[i] = (getdns_namespace_t) ns;
         }
         // set it
-        getdns_context_set_namespaces(context, numNamespaces, namespaces);
+        getdns_return_t r = getdns_context_set_namespaces(context, numNamespaces, namespaces);
         // free up memory
         delete[] namespaces;
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setStub(getdns_context* context, Local<Value> opt) {
-    if (opt->IsTrue()) {
-        getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_STUB);
-    } else {
-        getdns_context_set_resolution_type(context, GETDNS_RESOLUTION_RECURSING);
+static getdns_return_t setStub(getdns_context* context, Local<Value> opt) {
+    if (opt->IsBooleanObject() || opt->IsBoolean()) {
+        getdns_resolution_t resolution = opt->IsTrue() ? GETDNS_RESOLUTION_STUB : GETDNS_RESOLUTION_RECURSING;
+        getdns_return_t r = getdns_context_set_resolution_type(context, resolution);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setResolutionType(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setResolutionType(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_resolution_type(context, (getdns_resolution_t) num);
+        getdns_return_t r = getdns_context_set_resolution_type(context, (getdns_resolution_t) num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 
-static void setAppendName(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setAppendName(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_append_name(context, (getdns_append_name_t) num);
+        getdns_return_t r = getdns_context_set_append_name(context, (getdns_append_name_t) num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 int gqldns_b64_pton(char const *src, uint8_t *target, size_t targsize)
@@ -293,39 +314,41 @@ void tsigHelper(getdns_dict *ipDict, char *buf) {
 // Will first try to get the addresses for
 // www.verisignlabs.getdnsapi.net and will then try and return the
 // successfull lookup of the addresses for www.verisignlabs.com.
-static void setSuffixesHelper(getdns_context* context, char* buf) {
-
+static getdns_return_t setSuffixesHelper(getdns_context* context, char* buf) {
     getdns_list *suffixes;
     char *suffix;
     getdns_bindata bindata;
     size_t j;
 
-    if (!(suffixes = getdns_list_create()))
-        return;  // TODO handle memory errors
+    if (!(suffixes = getdns_list_create())) {
+        // TODO handle memory errors.
+        return GETDNS_RETURN_MEMORY_ERROR;
+    }
     suffix = strtok(buf, ",");
-        j = 0;
-        while (suffix) {
-            bindata.size = strlen(suffix);
-            bindata.data = (uint8_t *)suffix;
-            (void) getdns_list_set_bindata(
-                suffixes, j++, &bindata);
-            suffix = strtok(NULL, ",");
-       }
-       (void) getdns_context_set_suffix(context,
-           suffixes);
-       getdns_list_destroy(suffixes);
+    j = 0;
+    while (suffix) {
+        bindata.size = strlen(suffix);
+        bindata.data = (uint8_t *)suffix;
+        (void) getdns_list_set_bindata(
+            suffixes, j++, &bindata);
+        suffix = strtok(NULL, ",");
+   }
+   getdns_return_t r = getdns_context_set_suffix(context, suffixes);
+   getdns_list_destroy(suffixes);
+   return r;
 }
 
-static void setSuffixes(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setSuffixes(getdns_context* context, Local<Value> opt) {
     if (opt->IsString()) {
          Nan::Utf8String suff(opt->ToString());
-         setSuffixesHelper(context, (char *)*suff);
+         return setSuffixesHelper(context, (char *)*suff);
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 #define EXAMPLE_PIN "pin-sha256=\"E9CZ9INDbd+2eRQozYqqbQ2yXLVKB9+xcprMF+44U1g=\""
 
-static void setPinset(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setPinset(getdns_context* context, Local<Value> opt) {
     if (opt->IsString()) {
         Nan::Utf8String pin(opt->ToString());
         getdns_dict *pubkey_pin = NULL;
@@ -333,33 +356,32 @@ static void setPinset(getdns_context* context, Local<Value> opt) {
         static size_t pincount = 0;
         getdns_return_t r = GETDNS_RETURN_GOOD;
 
-        pubkey_pin = getdns_pubkey_pin_create_from_string(context,
-          (char *)*pin);
+        pubkey_pin = getdns_pubkey_pin_create_from_string(context, (char *)*pin);
         if (pubkey_pin == NULL) {
-         fprintf(stderr, "could not convert '%s' into a " \
-            "public key pin.\n" \
-            "Good pins look like: " EXAMPLE_PIN "\n" \
-            "Please see RFC 7469 for details about " \
-            "the format\n", (char *)*pin);
-         return;
+            // TODO: remove all fprintf.
+            fprintf(stderr, "could not convert '%s' into a " \
+                "public key pin.\n" \
+                "Good pins look like: " EXAMPLE_PIN "\n" \
+                "Please see RFC 7469 for details about " \
+                "the format\n", (char *)*pin);
+            return GETDNS_RETURN_CONTEXT_UPDATE_FAIL;
         }
         if (pubkey_pinset == NULL) {
           pubkey_pinset = getdns_list_create_with_context(context);
-          if (r = getdns_list_set_dict(pubkey_pinset, pincount++,
-             pubkey_pin), r) {
-                 fprintf(stderr, "Failed to add pin to pinset (error %d: %s)\n",
-                     r, getdns_get_errorstr_by_id(r));
-                 getdns_dict_destroy(pubkey_pin);
-                 pubkey_pin = NULL;
-                 return;
+          if (r = getdns_list_set_dict(pubkey_pinset, pincount++, pubkey_pin), r) {
+              // TODO: remove all fprintf.
+              fprintf(stderr, "Failed to add pin to pinset (error %d: %s)\n",
+                r, getdns_get_errorstr_by_id(r));
             }
             getdns_dict_destroy(pubkey_pin);
             pubkey_pin = NULL;
+            return r;
        }
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setUpstreams(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setUpstreams(getdns_context* context, Local<Value> opt) {
     if (opt->IsArray()) {
         getdns_list* upstreams = getdns_list_create();
         Local<Array> values = Local<Array>::Cast(opt);
@@ -408,45 +430,55 @@ static void setUpstreams(getdns_context* context, Local<Value> opt) {
                 getdns_list_set_dict(upstreams, len, ipDict);
                 getdns_dict_destroy(ipDict);
             } else {
-                Nan::Utf8String msg(String::Concat(Nan::New<String>("Upstream value is invalid: ").ToLocalChecked(), ipOrTuple->ToString()));
-                Nan::ThrowTypeError(*msg);
+                return GETDNS_RETURN_CONTEXT_UPDATE_FAIL;
             }
         }
         getdns_return_t r = getdns_context_set_upstream_recursive_servers(context, upstreams);
         getdns_list_destroy(upstreams);
-        if (r != GETDNS_RETURN_GOOD) {
-            Nan::ThrowTypeError("Failed to set upstreams.");
-        }
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 
-static void setTimeout(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setTimeout(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_timeout(context, num);
+        getdns_return_t r = getdns_context_set_timeout(context, num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setDnssecAllowedSkew(getdns_context* context, Local<Value> opt) {
+static getdns_return_t setDnssecAllowedSkew(getdns_context* context, Local<Value> opt) {
     if (opt->IsNumber()) {
         uint32_t num = opt->Uint32Value();
-        getdns_context_set_dnssec_allowed_skew(context, num);
+        getdns_return_t r = getdns_context_set_dnssec_allowed_skew(context, num);
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setUseThreads(getdns_context* context, Local<Value> opt) {
-    int val = opt->IsTrue() ? 1 : 0;
-    getdns_context_set_use_threads(context, val);
+static getdns_return_t setUseThreads(getdns_context* context, Local<Value> opt) {
+    if (opt->IsBooleanObject() || opt->IsBoolean()) {
+        int val = opt->IsTrue() ? 1 : 0;
+        getdns_return_t r = getdns_context_set_use_threads(context, val);
+        return r;
+    }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
-static void setReturnDnssecStatus(getdns_context* context, Local<Value> opt) {
-    int val = opt->IsTrue() ? GETDNS_EXTENSION_TRUE : GETDNS_EXTENSION_FALSE;
-    getdns_context_set_return_dnssec_status(context, val);
+static getdns_return_t setReturnDnssecStatus(getdns_context* context, Local<Value> opt) {
+    if (opt->IsBooleanObject() || opt->IsBoolean()) {
+        int val = opt->IsTrue() ? GETDNS_EXTENSION_TRUE : GETDNS_EXTENSION_FALSE;
+        getdns_return_t r = getdns_context_set_return_dnssec_status(context, val);
+        return r;
+    }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 // set alternate root servers from a file passed in
-static void setDnsRootServers(getdns_context* context, Local<Value> opt)
+static getdns_return_t setDnsRootServers(getdns_context* context, Local<Value> opt)
 {
     FILE *fh;
     getdns_list *hints = NULL;
@@ -454,61 +486,57 @@ static void setDnsRootServers(getdns_context* context, Local<Value> opt)
     if (opt->IsString()) {
          Nan::Utf8String roots(opt->ToString());
         if (!(fh = fopen((char *)*roots, "r"))) {
-           fprintf(stderr, "Could not open %s\n", (char *)*roots);
-           return;
+            // TODO: remove all fprintf.
+            fprintf(stderr, "Could not open %s\n", (char *)*roots);
+            return GETDNS_RETURN_GENERIC_ERROR;
         }
         if (getdns_fp2rr_list(fh, &hints, NULL, 3600)) {
-           fprintf(stderr,"Could not parse "
-             "\"%s\"\n", (char *)*roots);
-           return;
+            // TODO: remove all fprintf.
+            fprintf(stderr,"Could not parse "
+                "\"%s\"\n", (char *)*roots);
+            return GETDNS_RETURN_GENERIC_ERROR;
         }
         fclose(fh);
-        if (getdns_context_set_dns_root_servers(
-            context, hints)) {
-            fprintf(stderr,"Could not set "
-               "root servers from \"%s\"\n",
-               (char *)*roots);
-            return;
-        }
+        getdns_return_t r = getdns_context_set_dns_root_servers(context, hints);
         getdns_list_destroy(hints);
         hints = NULL;
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 
 // Read the location of the Trust anchor and pass it to getdns.
 // TODO: actually pass in the trust anchor.
-static void setTrustAnchor(getdns_context *context, Local<Value> opt)
+static getdns_return_t setTrustAnchor(getdns_context *context, Local<Value> opt)
 {
     FILE *fh;
     getdns_list *tas = NULL;
+
     if (opt->IsString()) {
          Nan::Utf8String ta(opt->ToString());
 
        if (!(fh = fopen((char *)*ta, "r"))) {
            fprintf(stderr, "Could not open %s\n", (char *)*ta);
-           return;
+           return GETDNS_RETURN_GENERIC_ERROR;
         }
         if (getdns_fp2rr_list(fh, &tas, NULL, 3600)) {
-           fprintf(stderr,"Could not parse "
-             "\"%s\"\n", (char *)*ta);
-           return;
+            // TODO: remove all fprintf.
+            fprintf(stderr,"Could not parse "
+                "\"%s\"\n", (char *)*ta);
+            return GETDNS_RETURN_GENERIC_ERROR;
         }
         fclose(fh);
-        if (getdns_context_set_dnssec_trust_anchors(
-            context, tas)) {
-            fprintf(stderr,"Could not set "
-               "root servers from \"%s\"\n",
-               (char *)*ta);
-            return;
-        }
+        getdns_return_t r = getdns_context_set_dnssec_trust_anchors(context, tas);
         getdns_list_destroy(tas);
         tas = NULL;
+        return r;
     }
+    return GETDNS_RETURN_INVALID_PARAMETER;
 }
 
 
-typedef void (*context_setter)(getdns_context* context, Local<Value> opt);
+typedef getdns_return_t (*context_setter)(getdns_context* context, Local<Value> opt);
 typedef struct OptionSetter {
     const char* opt_name;
     context_setter setter;
@@ -573,34 +601,47 @@ NAN_SETTER(GNContext::SetContextValue) {
     Nan::Utf8String name(property);
     GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
     if (!ctx) {
-        Nan::ThrowError("Context is invalid.");
+        return Nan::ThrowError("Context is invalid.");
     }
     size_t s = 0;
-    bool found = false;
-    for (s = 0; s < NUM_SETTERS && !found; ++s) {
+    for (s = 0; s < NUM_SETTERS; ++s) {
         if (strcmp(SETTERS[s].opt_name, *name) == 0) {
-            SETTERS[s].setter(ctx->context_, value);
-            found = true;
-            break;
+            getdns_return_t r = SETTERS[s].setter(ctx->context_, value);
+            if (r != GETDNS_RETURN_GOOD) {
+                Local<Value> typeError = makeTypeErrorWithCode(*name, r);
+                return Nan::ThrowError(typeError);
+            }
+            return;
         }
     }
     if (!value->IsNumber()) {
-        return;
+        Local<Value> typeError = makeTypeErrorWithCode(*name, GETDNS_RETURN_INVALID_PARAMETER);
+        return Nan::ThrowError(typeError);
     }
-    for (s = 0; s < NUM_UINT8_SETTERS && !found; ++s) {
+    for (s = 0; s < NUM_UINT8_SETTERS; ++s) {
         if (strcmp(UINT8_OPTION_SETTERS[s].opt_name, *name) == 0) {
-            found = true;
             uint32_t optVal = value->Uint32Value();
-            UINT8_OPTION_SETTERS[s].setter(ctx->context_, (uint8_t)optVal);
+            getdns_return_t r = UINT8_OPTION_SETTERS[s].setter(ctx->context_, (uint8_t)optVal);
+            if (r != GETDNS_RETURN_GOOD) {
+                Local<Value> typeError = makeTypeErrorWithCode(*name, r);
+                return Nan::ThrowError(typeError);
+            }
+            return;
         }
     }
-    for (s = 0; s < NUM_UINT16_SETTERS && !found; ++s) {
+    for (s = 0; s < NUM_UINT16_SETTERS; ++s) {
         if (strcmp(UINT16_OPTION_SETTERS[s].opt_name, *name) == 0) {
-            found = true;
             uint32_t optVal = value->Uint32Value();
-            UINT16_OPTION_SETTERS[s].setter(ctx->context_, (uint16_t)optVal);
+            getdns_return_t r = UINT16_OPTION_SETTERS[s].setter(ctx->context_, (uint16_t)optVal);
+            if (r != GETDNS_RETURN_GOOD) {
+                Local<Value> typeError = makeTypeErrorWithCode(*name, r);
+                return Nan::ThrowError(typeError);
+            }
+            return;
         }
     }
+    Local<Value> typeError = makeTypeErrorWithCode(*name, GETDNS_RETURN_INVALID_PARAMETER);
+    return Nan::ThrowError(typeError);
 }
 
 void GNContext::InitProperties(Local<Object> ctx) {
@@ -622,8 +663,21 @@ void GNContext::InitProperties(Local<Object> ctx) {
 
 GNContext::GNContext() : context_(NULL) { }
 GNContext::~GNContext() {
-    getdns_context_destroy(context_);
-    context_ = NULL;
+    if (context_ != NULL) {
+        getdns_context_destroy(context_);
+        context_ = NULL;
+    }
+
+    // NOTE: same cleanup as in ObjectWrap.
+    {
+        if (persistent().IsEmpty()) {
+          return;
+        }
+
+        assert(persistent().IsNearDeath());
+        persistent().ClearWeak();
+        persistent().Reset();
+    }
 }
 
 void GNContext::ApplyOptions(Local<Object> self, Local<Value> optsV) {
@@ -672,9 +726,10 @@ void GNContext::Init(Local<Object> target) {
 
 // Explicity destroy the context
 NAN_METHOD(GNContext::Destroy) {
-    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.Holder());
     if (!ctx) {
         Nan::ThrowError(Nan::New<String>("Context is invalid.").ToLocalChecked());
+        return;
     }
     getdns_context_destroy(ctx->context_);
     ctx->context_ = NULL;
@@ -691,6 +746,7 @@ NAN_METHOD(GNContext::New) {
             // Failed to create an underlying context
             delete ctx;
             Nan::ThrowError(Nan::New<String>("Unable to create GNContext.").ToLocalChecked());
+            return;
         }
 
         // Attach the context to node
@@ -711,7 +767,6 @@ NAN_METHOD(GNContext::New) {
             GNContext::ApplyOptions(info.This(), info[0]);
             if (try_catch.HasCaught()) {
                 // Need to bail
-                delete ctx;
                 try_catch.ReThrow();
                 return;
             }
@@ -719,6 +774,7 @@ NAN_METHOD(GNContext::New) {
         info.GetReturnValue().Set(info.This());
     } else {
         Nan::ThrowError(Nan::New<String>("Must use new.").ToLocalChecked());
+        return;
     }
     return;
 }
@@ -755,7 +811,7 @@ void GNContext::Callback(getdns_context *context,
 
 // Cancel a req.  Expect it to be a transaction id as a buffer
 NAN_METHOD(GNContext::Cancel) {
-    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.Holder());
     if (!ctx || !ctx->context_) {
         info.GetReturnValue().Set(Nan::False());
     }
@@ -775,15 +831,15 @@ NAN_METHOD(GNContext::Cancel) {
 NAN_METHOD(GNContext::Lookup) {
     // name, type, and callback are required
     if (info.Length() < 3) {
-        Nan::ThrowTypeError("At least 3 arguments are required.");
+        return Nan::ThrowTypeError(Nan::New<String>("At least 3 arguments are required.").ToLocalChecked());
     }
     // last arg must be a callback
     Local<Value> last = info[info.Length() - 1];
     if (!last->IsFunction()) {
-        Nan::ThrowTypeError("Final argument must be a function.");
+        return Nan::ThrowTypeError(Nan::New<String>("Final argument must be a function.").ToLocalChecked());
     }
     Local<Function> localCb = Local<Function>::Cast(last);
-    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.Holder());
     if (!ctx || !ctx->context_) {
         Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
         Local<Value> cbArgs[] = { err };
@@ -840,15 +896,15 @@ NAN_METHOD(GNContext::HelperLookup) {
     // optional argument of extensions
     // name, type, and callback are required
     if (info.Length() < 2) {
-        Nan::ThrowTypeError("At least 2 arguments are required.");
+        return Nan::ThrowTypeError(Nan::New<String>("At least 2 arguments are required.").ToLocalChecked());
     }
     // last arg must be a callback
     Local<Value> last = info[info.Length() - 1];
     if (!last->IsFunction()) {
-        Nan::ThrowTypeError("Final argument must be a function.");
+        return Nan::ThrowTypeError(Nan::New<String>("Final argument must be a function.").ToLocalChecked());
     }
     Local<Function> localCb = Local<Function>::Cast(last);
-    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.This());
+    GNContext* ctx = Nan::ObjectWrap::Unwrap<GNContext>(info.Holder());
     if (!ctx || !ctx->context_) {
         Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
         Local<Value> cbArgs[] = { err };
