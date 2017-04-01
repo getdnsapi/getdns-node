@@ -42,8 +42,11 @@
     "npm": "^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "scripts": {
-    "install": "node-gyp rebuild",
-    "postinstall": "node-gyp rebuild",
+    "install": "npm run --silent rebuild",
+    "postinstall": "npm run --silent rebuild",
+    "clean": "node-gyp clean",
+    "build": "node-gyp configure build",
+    "rebuild": "node-gyp rebuild",
     "test": "npm run --silent mocha && npm run --silent lint",
     "test:run": "npm run --silent mocha:run --",
     "mocha": "npm run --silent mocha:run:all",

@@ -429,7 +429,7 @@ Development follows [git-flow](http://danielkummer.github.io/git-flow-cheatsheet
 npm install
 
 # If editing C++ code and headers in in src/ either build or rebuild the module as necessary.
-node-gyp rebuild
+npm run --silent build
 
 # Please add tests for any changes. See if there is a specific file matching your change, or create a new.
 # NOTE: you can run tests per file..
