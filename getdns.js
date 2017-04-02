@@ -33,8 +33,17 @@ const getdns = require("bindings")("getdns");
 module.exports = getdns.constants;
 
 // Wrap context creation.
-module.exports.createContext = function(...args) {
-    const ctx = new getdns.Context(...args);
+module.exports.createContext = function(options) {
+    if (arguments.length > 1) {
+        // NOTE: duplicated in getdns.js and GNContext.cpp.
+        // TODO: use new getdns.Context(...args) when not supporting node.js v4 anymore.
+        const tooManyArgumentsTypeError = new TypeError("Too many arguments.");
+        tooManyArgumentsTypeError.code = getdns.constants.RETURN_INVALID_PARAMETER;
+
+        throw tooManyArgumentsTypeError;
+    }
+
+    const ctx = new getdns.Context(options);
     const oldDestroyFunc = ctx.destroy;
     let destroyed = false;
 
