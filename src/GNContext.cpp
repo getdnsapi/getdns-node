@@ -768,6 +768,8 @@ NAN_METHOD(GNContext::Destroy) {
 NAN_METHOD(GNContext::New) {
     if (info.IsConstructCall()) {
         if (info.Length() > 1) {
+            // NOTE: duplicated in getdns.js and GNContext.cpp.
+            // TODO: use new getdns.Context(...args) when not supporting node.js v4 anymore.
             Local<Value> typeError = makeTypeErrorWithCode("Too many arguments.", GETDNS_RETURN_INVALID_PARAMETER);
             return Nan::ThrowError(typeError);
         }
