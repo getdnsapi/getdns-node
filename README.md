@@ -453,6 +453,23 @@ Note that the tests require an internet connection, [getdns](https://getdnsapi.n
 
 
 
+# Contributors
+
+See also getdns-node [committers](https://github.com/getdnsapi/getdns-node/graphs/contributors) and getdns [committers](https://github.com/getdnsapi/getdns/graphs/contributors), [contributors](https://github.com/getdnsapi/getdns#contributors), and [acknowledgements](https://github.com/getdnsapi/getdns#acknowledgements).
+
+|   | Contributor |
+| :---: | --- |
+| <img src="https://github.com/saghul.png?size=48" width="48" /> | Saúl Ibarra Corretgé<br />[@saghul](https://github.com/saghul) |
+| <img src="https://github.com/ngoyal.png?size=48" width="48" /> | Neel Goyal<br />[ngoyal](https://github.com/ngoyal) |
+| <img src="https://github.com/anthonykirby.png?size=48" width="48" /> | Anthony Kirby<br />[@anthonykirby](https://github.com/anthonykirby) |
+| <img src="https://github.com/joelpurra.png?size=48" width="48" /> | Joel Purra<br />[@joelpurra](https://github.com/joelpurra) |
+| <img src="https://github.com/wtoorop.png?size=48" width="48" /> | Willem Toorop<br />[@wtoorop](https://github.com/wtoorop) |
+| <img src="https://github.com/gmadkat.png?size=48" width="48" /> | Gowri Visweswaran<br />[@gmadkat](https://github.com/gmadkat) |
+
+Want to be on this list? Fastest way is to fix a spelling mistake 😃
+
+
+
 ---
 
 <a href="https://getdnsapi.net/"><img src="resources/logo/getdns-64x.png" alt="getdns logotype" title="getdns" width="64" height="21" border="0" /></a> [getdnsapi/getdns-node](https://github.com/getdnsapi/getdns-node) Copyright &copy; 2014, 2015, 2016, 2017, Verisign, Inc. All rights reserved. Released under the [BSD 3-clause License](https://opensource.org/licenses/BSD-3-Clause).
