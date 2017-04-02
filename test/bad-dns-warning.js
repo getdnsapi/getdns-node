@@ -78,7 +78,7 @@ describe("BADDNS", () => {
                         getdns.BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE,
                     ];
 
-                    return badDnsValus.includes(badDns);
+                    return badDnsValus.indexOf(badDns) !== -1;
                 });
                 expect(badDnsReplies.length).to.be(reply.bad_dns.length);
             });
