@@ -76,8 +76,6 @@ var options = {
     ],
     // Request timeout time in milliseconds.
     timeout: 1000,
-    // NOTE: optionally enforce DNSSEC security validation.
-    //dnssec_return_only_secure: true,
     // Always return DNSSEC status.
     return_dnssec_status: true
 };
@@ -102,9 +100,15 @@ var callback = function(err, result) {
     context.destroy();
 };
 
+// NOTE: the extensions parameter is optional.
+var extensions = {
+  // NOTE: enforce DNSSEC security validation and return only secure replies.
+  //dnssec_return_only_secure: true,
+};
+
 // Simple domain name-to-ip address lookup.
 // Always returns both IPv4 and IPv6 results, if available.
-var transactionId = context.address("wikipedia.org", callback);
+var transactionId = context.address("wikipedia.org", extensions, callback);
 ```
 
 
