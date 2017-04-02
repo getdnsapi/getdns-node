@@ -33,8 +33,8 @@ const getdns = require("bindings")("getdns");
 module.exports = getdns.constants;
 
 // Wrap context creation.
-module.exports.createContext = function(opts) {
-    const ctx = new getdns.Context(opts);
+module.exports.createContext = function(...args) {
+    const ctx = new getdns.Context(...args);
     const oldDestroyFunc = ctx.destroy;
     let destroyed = false;
 

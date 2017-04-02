@@ -767,14 +767,18 @@ NAN_METHOD(GNContext::Destroy) {
 // Create a context (new op)
 NAN_METHOD(GNContext::New) {
     if (info.IsConstructCall()) {
+        if (info.Length() > 1) {
+            Local<Value> typeError = makeTypeErrorWithCode("Too many arguments.", GETDNS_RETURN_INVALID_PARAMETER);
+            return Nan::ThrowError(typeError);
+        }
+
         // new obj
         GNContext* ctx = new GNContext();
         getdns_return_t r = getdns_context_create(&ctx->context_, 1);
         if (r != GETDNS_RETURN_GOOD) {
             // Failed to create an underlying context
             delete ctx;
-            Nan::ThrowError(Nan::New<String>("Unable to create GNContext.").ToLocalChecked());
-            return;
+            return Nan::ThrowError(Nan::New<String>("Unable to create GNContext.").ToLocalChecked());
         }
 
         // Attach the context to node
@@ -782,14 +786,13 @@ NAN_METHOD(GNContext::New) {
         if (!attached) {
             // Bail
             delete ctx;
-            Nan::ThrowError(Nan::New<String>("Unable to attach to Node.").ToLocalChecked());
-            return;
+            return Nan::ThrowError(Nan::New<String>("Unable to attach to Node.").ToLocalChecked());
         }
         ctx->Wrap(info.This());
         // add setters
         GNContext::InitProperties(info.This());
         // Apply options if needed
-        if (info.Length() > 0) {
+        if (info.Length() == 1) {
             // could throw an
             TryCatch try_catch;
             GNContext::ApplyOptions(info.This(), info[0]);
@@ -801,8 +804,7 @@ NAN_METHOD(GNContext::New) {
         }
         info.GetReturnValue().Set(info.This());
     } else {
-        Nan::ThrowError(Nan::New<String>("Must use new.").ToLocalChecked());
-        return;
+        return Nan::ThrowError(Nan::New<String>("Must use new.").ToLocalChecked());
     }
     return;
 }
