@@ -681,13 +681,41 @@ GNContext::~GNContext() {
 }
 
 void GNContext::ApplyOptions(Local<Object> self, Local<Value> optsV) {
-    if (!GNUtil::isDictionaryObject(optsV)) {
+    if(optsV->IsUndefined()) {
+        // NOTE: can be called without options.
         return;
     }
-    TryCatch try_catch;
+    if (!GNUtil::isDictionaryObject(optsV)) {
+        Local<Value> typeError = makeTypeErrorWithCode("options", GETDNS_RETURN_INVALID_PARAMETER);
+        return Nan::ThrowError(typeError);
+    }
+    Local<Object> selfObj = self->ToObject();
+    Local<Array> selfNames = selfObj->GetOwnPropertyNames();
     Local<Object> opts = optsV->ToObject();
     Local<Array> names = opts->GetOwnPropertyNames();
+    // check options for matching properties
+    if (names->Length() > selfNames->Length()) {
+        Local<Value> typeError = makeTypeErrorWithCode("options", GETDNS_RETURN_INVALID_PARAMETER);
+        return Nan::ThrowError(typeError);
+    }
+    bool found = false;
+    for(unsigned int i = 0; i < names->Length(); i++) {
+        found = false;
+        Nan::Utf8String nameVal(names->Get(i)->ToString());
+        for(unsigned int j = 0; j < selfNames->Length(); j++) {
+            Nan::Utf8String selfNameVal(selfNames->Get(j)->ToString());
+            if (strcmp(*nameVal, *selfNameVal) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if(!found) {
+            Local<Value> typeError = makeTypeErrorWithCode(*nameVal, GETDNS_RETURN_INVALID_PARAMETER);
+            return Nan::ThrowError(typeError);
+        }
+    }
     // walk properties
+    TryCatch try_catch;
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
         Local<Value> opt = opts->Get(nameVal);
