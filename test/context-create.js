@@ -38,11 +38,60 @@ const shared = require("./shared");
 
 shared.initialize();
 
-// Basic creation with various options.
 describe("Context Create", () => {
-    it("Should create a default context", () => {
+    it("Should not require options parameter", () => {
         const ctx = getdns.createContext();
-        expect(ctx).to.be.ok();
+        expect(ctx).to.be.an("object");
+        expect(ctx.destroy()).to.be.ok();
+    });
+
+    it("Should throw for defined non-object options parameter", () => {
+        expect(() => {
+            getdns.createContext("a string instead of object");
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("options");
+        });
+    });
+
+    it("Should throw for more than one parameter", () => {
+        expect(() => {
+            getdns.createContext({
+                return_dnssec_status: true,
+            }, {
+                resolution_type: getdns.RESOLUTION_RECURSING,
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+        });
+    });
+
+    it("Should throw for an unknown option", () => {
+        expect(() => {
+            getdns.createContext({
+                mispeled_option: "not known to getdns",
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("mispeled_option");
+        });
+    });
+
+    it("Should have functions", () => {
+        const ctx = getdns.createContext();
+        expect(ctx).to.be.an("object");
 
         expect(ctx.destroy).to.be.an("function");
         expect(ctx.cancel).to.be.an("function");
@@ -62,7 +111,7 @@ describe("Context Create", () => {
         expect(ctx.destroy()).to.be.ok();
     });
 
-    it("Should create a context with options", () => {
+    it("Should accept options", () => {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
             upstream_recursive_servers: [
@@ -72,21 +121,66 @@ describe("Context Create", () => {
             timeout: 10,
         });
 
-        expect(ctx).to.be.ok();
+        expect(ctx).to.be.an("object");
         expect(ctx.destroy()).to.be.ok();
     });
 
-    it("Should create a context with deprecated options", () => {
+    it("Should accept deprecated options", () => {
         const ctx = getdns.createContext({
             stub: true,
             upstreams: [
                 "8.8.8.8",
-                ["127.0.0.1", 53],
+                    ["127.0.0.1", 53],
             ],
             timeout: 10,
         });
 
-        expect(ctx).to.be.ok();
+        expect(ctx).to.be.an("object");
         expect(ctx.destroy()).to.be.ok();
+    });
+
+    it("Should throw for bad resolution_type", () => {
+        expect(() => {
+            getdns.createContext({
+                resolution_type: true,
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("resolution_type");
+        });
+    });
+
+    it("Should throw for bad upstream_recursive_servers", () => {
+        expect(() => {
+            getdns.createContext({
+                upstream_recursive_servers: "1.2.3.4",
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("upstream_recursive_servers");
+        });
+    });
+
+    it("Should throw for bad timeout", () => {
+        expect(() => {
+            getdns.createContext({
+                timeout: () => 1234,
+            });
+        }).to.throwException((err) => {
+            expect(err).to.be.an("object");
+            expect(err).to.be.an(TypeError);
+            expect(err.code).to.be.an("number");
+            expect(err.code).to.be(getdns.RETURN_INVALID_PARAMETER);
+            expect(err.message).to.be.an("string");
+            expect(err.message).to.be("timeout");
+        });
     });
 });
