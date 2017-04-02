@@ -39,7 +39,7 @@ const shared = require("./shared");
 shared.initialize();
 
 describe("Cancelled queries", () => {
-    it("Should cancel the query", function(done) {
+    it("Should be able to synchronously cancel the query", function(done) {
         const ctx = getdns.createContext({
             resolution_type: getdns.RESOLUTION_STUB,
         });
@@ -54,6 +54,117 @@ describe("Cancelled queries", () => {
         });
 
         expect(transId).to.be.ok();
-        expect(ctx.cancel(transId)).to.be.ok();
+
+        const cancelResult = ctx.cancel(transId);
+        expect(cancelResult).to.be.ok();
+    });
+
+    it("Should be able to asynchronously cancel the query", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+        });
+
+        let callCount = 0;
+
+        const transId = ctx.address("labs.verisigninc.com", (err, result) => {
+            callCount++;
+            expect(callCount).to.be(1);
+            expect(err).to.be.an("object");
+            expect(result).to.be(null);
+            expect(err).to.have.property("msg");
+            expect(err).to.have.property("code");
+            expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
+            shared.destroyContext(ctx, done);
+        });
+
+        expect(transId).to.be.ok();
+
+        // NOTE: using setTimeout isn't reliable, as the reply cache might be faster.
+        setImmediate(() => {
+            const cancelResult = ctx.cancel(transId);
+            expect(cancelResult).to.be.ok();
+        });
+    });
+
+    it("Should not be able to synchronously cancel the query twice", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+        });
+
+        let callCount = 0;
+
+        const transId = ctx.address("nlnetlabs.nl", (err, result) => {
+            // TODO BUG: this callback is being called synchronously due to cancel() being synchronous.
+            // TODO BUG: the callback might be called twice. This might not be detectable after the test has ended.
+            callCount++;
+            expect(callCount).to.be(1);
+
+            expect(err).to.be.an("object");
+            expect(result).to.be(null);
+            expect(err).to.have.property("msg");
+            expect(err).to.have.property("code");
+            expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
+            shared.destroyContext(ctx, done);
+        });
+
+        expect(transId).to.be.ok();
+
+        const cancelResult = ctx.cancel(transId);
+
+        // TODO BUG: this code is never reached, at least not within the scope of the test.
+        expect().fail("Something is wrong, because this is never called (or at least not reported).");
+
+        expect(cancelResult).to.be.ok();
+
+        // NOTE: should not be able to cancel the same transaction twice.
+        const cancelResult2 = ctx.cancel(transId);
+        expect(cancelResult2).to.not.be.ok();
+    });
+
+    it("Should not be able to asynchronously cancel the query twice", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+        });
+
+        const transId = ctx.address("dnssec-name-and-shame.com", (err, result) => {
+            expect(err).to.be.an("object");
+            expect(result).to.be(null);
+            expect(err).to.have.property("msg");
+            expect(err).to.have.property("code");
+            expect(err.code).to.equal(getdns.CALLBACK_CANCEL);
+            shared.destroyContext(ctx, done);
+        });
+
+        expect(transId).to.be.ok();
+
+        // NOTE: using setTimeout isn't reliable, as the reply cache might be faster.
+        setImmediate(() => {
+            const cancelResult = ctx.cancel(transId);
+            expect(cancelResult).to.be.ok();
+
+            // NOTE: using setTimeout isn't reliable, as the reply cache might be faster.
+            setImmediate(() => {
+                const cancelResult2 = ctx.cancel(transId);
+                expect(cancelResult2).to.not.be.ok();
+            });
+        });
+    });
+
+    it("Should not be able to cancel the query after callback", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+        });
+
+        const transId = ctx.address("nlnet.nl", (err, result) => {
+            const cancelResult = ctx.cancel(transId);
+            expect(cancelResult).to.not.be.ok();
+
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
+            shared.destroyContext(ctx, done);
+        });
+
+        expect(transId).to.be.ok();
     });
 });
