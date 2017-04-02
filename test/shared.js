@@ -28,13 +28,12 @@
 "use strict";
 
 const expect = require("expect.js");
-// const segfaultHandler = require("segfault-handler");
+const segfaultHandler = require("segfault-handler");
 
 const initialize = () => {
     // Dump segfault stacktraces both to the console and to a file.
-    // NOTE: enable on demand. Might cause crashes on node.js v4.
-    // const segfaultDumpFilename = "crash.log";
-    // segfaultHandler.registerHandler(segfaultDumpFilename);
+    const segfaultDumpFilename = "crash.log";
+    segfaultHandler.registerHandler(segfaultDumpFilename);
 };
 
 const destroyContext = (ctx, done) => {
