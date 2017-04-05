@@ -1,6 +1,6 @@
 {
   "name": "getdns",
-  "version": "1.0.0",
+  "version": "2.0.0-alpha.1",
   "description": "getdns bindings for Node.js. getdns is a modern asynchronous DNS API. It implements DNS entry points from a design developed and vetted by application developers, in an API specification.",
   "main": "getdns.js",
   "keywords": [
@@ -32,6 +32,7 @@
     "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
     "mocha": "^3.2.0",
+    "mocha-parallel-tests": "^1.2.7",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.0"
@@ -41,12 +42,25 @@
     "npm": "^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "scripts": {
-    "postinstall": "node-gyp rebuild",
-    "test": "mocha && npm run --silent lint",
+    "install": "npm run --silent rebuild",
+    "postinstall": "npm run --silent rebuild && npm run --silent test",
+    "clean": "node-gyp clean",
+    "build": "node-gyp configure build",
+    "rebuild": "node-gyp rebuild",
+    "test": "npm run --silent mocha && npm run --silent lint",
+    "test:run": "npm run --silent mocha:run --",
+    "mocha": "npm run --silent mocha:parallel:run:all",
+    "mocha:parallel": "npm run --silent mocha:parallel:run:all",
+    "mocha:serial": "npm run --silent mocha:serial:run:all",
+    "mocha:run": "npm run --silent mocha:parallel:run --",
+    "mocha:parallel:run": "mocha-parallel-tests --slow 500 --timeout 10000",
+    "mocha:serial:run": "mocha --slow 500 --timeout 10000",
+    "mocha:run:all": "npm run --silent mocha:parallel:run",
+    "mocha:parallel:run:all": "npm run --silent mocha:parallel:run -- test/",
+    "mocha:serial:run:all": "npm run --silent mocha:serial:run -- test/",
     "lint": "npm run --silent eslint --",
     "eslint": "eslint ./src ./test ./samples getdns.js",
-    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js",
-    "install": "node-gyp rebuild"
+    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js"
   },
   "license": "BSD-3-Clause",
   "bugs": {

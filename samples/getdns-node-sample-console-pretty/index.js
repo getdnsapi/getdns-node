@@ -5,20 +5,19 @@
 "use strict";
 
 const getdns = require("getdns");
+const supportsColor = require("supports-color");
 const chalk = require("chalk");
 const jclrz = require("json-colorz");
 
-const options = {
-    // Request timeout time in milliseconds.
-    timeout: 5000,
-    "upstreams": [
-        "8.8.8.8",
-    ],
-    // Always return dnssec status.
-    return_dnssec_status: true,
+const displayFullResults = process.argv[2] === "--json";
+
+const chalkOptions = {
+    enabled: supportsColor,
 };
 
-const displayFullResults = process.argv[2] === "--json";
+const chalkContext = new chalk.constructor(chalkOptions);
+
+jclrz.params.colored = supportsColor;
 
 const replaceBufferWithPlaceholder = (/* eslint-disable no-unused-vars */key/* eslint-enable no-unused-vars */, value) => {
     if (value === null || typeof value !== "object") {
@@ -70,7 +69,7 @@ const displayLookupResults = (type, err, result) => {
             return reply.dnssec_status === getdns.DNSSEC_SECURE;
         });
 
-        console.log(`Lookup of ${chalk.bold(type)} for ${chalk.bold(result.canonical_name)} gave ${chalk.yellow(replies.length)} replies, out of which ${chalk.green(dnssecSecureReplies.length)} were secure.`);
+        console.log(`Lookup of ${chalkContext.bold(type)} for ${chalkContext.bold(result.canonical_name)} gave ${chalkContext.yellow(replies.length)} replies, out of which ${chalkContext.green(dnssecSecureReplies.length)} were secure.`);
     }
 };
 
@@ -79,6 +78,16 @@ const generalCallback = displayLookupResults.bind(null, "general");
 const addressCallback = displayLookupResults.bind(null, "address");
 const serviceCallback = displayLookupResults.bind(null, "service");
 const hostnameCallback = displayLookupResults.bind(null, "hostname");
+
+const options = {
+    // Request timeout time in milliseconds.
+    timeout: 5000,
+    "upstreams": [
+        "8.8.8.8",
+    ],
+    // Always return dnssec status.
+    return_dnssec_status: true,
+};
 
 // Create the context with the above options.
 // When done with a context, it must be explicitly destroyed, for example in a callback.
@@ -98,7 +107,7 @@ const transactionId = context.general("labs.verisigninc.com", getdns.RRTYPE_A, g
 // Other getdns context methods.
 // NOTE: don't destroy context in callback so it can be reused.
 // Extensions are passed as dictionaries where the value for on/off are normal booleans.
-context.address("nlnetlabs.nl", { return_both_v4_and_v6: true }, addressCallback);
+context.address("nlnetlabs.nl", { dnssec_return_only_secure: true }, addressCallback);
 context.service("dnssec-name-and-shame.com", serviceCallback);
 context.hostname("8.8.8.8", hostnameCallback);
 

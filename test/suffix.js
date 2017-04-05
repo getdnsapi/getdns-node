@@ -25,55 +25,54 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* global
+describe:false,
+it:false,
+*/
+
 "use strict";
 
-const getdns = require("bindings")("getdns");
+const expect = require("expect.js");
+const getdns = require("../");
+const shared = require("./shared");
 
-// Export constants directly.
-module.exports = getdns.constants;
+shared.initialize();
 
-// Wrap context creation.
-module.exports.createContext = function(options) {
-    if (arguments.length > 1) {
-        // NOTE: duplicated in getdns.js and GNContext.cpp.
-        // TODO: use new getdns.Context(...args) when not supporting node.js v4 anymore.
-        const tooManyArgumentsTypeError = new TypeError("Too many arguments.");
-        tooManyArgumentsTypeError.code = getdns.constants.RETURN_INVALID_PARAMETER;
-
-        throw tooManyArgumentsTypeError;
-    }
-
-    const ctx = new getdns.Context(options);
-    const oldDestroyFunc = ctx.destroy;
-    let destroyed = false;
-
-    ctx.destroy = function() {
-        if (destroyed) {
-            return false;
-        }
-        destroyed = true;
-        setImmediate(function() {
-            oldDestroyFunc.call(ctx);
+describe("Suffix", () => {
+    it("Should return replies", function(done) {
+        const ctx = getdns.createContext({
+            upstream_recursive_servers: [
+                [
+                    "8.8.8.8",
+                    53,
+                    "~getdnsapi.net,net",
+                ],
+            ],
         });
-        return true;
-    };
 
-    // Add the wrappers for more consistent getdns API.
-    ctx.general = function() {
-        return ctx.lookup.apply(ctx, arguments);
-    };
+        ctx.general("www.verisignlabs", getdns.RRTYPE_A, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
 
-    ctx.address = function() {
-        return ctx.getAddress.apply(ctx, arguments);
-    };
+            // TODO: check for example result.canonical_name.
+            shared.destroyContext(ctx, done);
+        });
+    });
 
-    ctx.service = function() {
-        return ctx.getService.apply(ctx, arguments);
-    };
+    it("APPEND_NAME_ALWAYS should return replies", function(done) {
+        const ctx = getdns.createContext({
+            suffix: "org",
+            append_name: getdns.APPEND_NAME_ALWAYS,
+        });
 
-    ctx.hostname = function() {
-        return ctx.getHostname.apply(ctx, arguments);
-    };
+        ctx.general("www.verisignlabs", getdns.RRTYPE_A, (err, result) => {
+            expect(err).to.be(null);
+            expect(result.replies_tree).to.be.an(Array);
+            expect(result.replies_tree).to.not.be.empty();
 
-    return ctx;
-};
+            // TODO: check for example result.canonical_name.
+            shared.destroyContext(ctx, done);
+        });
+    });
+});

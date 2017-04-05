@@ -27,53 +27,24 @@
 
 "use strict";
 
-const getdns = require("bindings")("getdns");
+const expect = require("expect.js");
+const segfaultHandler = require("segfault-handler");
 
-// Export constants directly.
-module.exports = getdns.constants;
-
-// Wrap context creation.
-module.exports.createContext = function(options) {
-    if (arguments.length > 1) {
-        // NOTE: duplicated in getdns.js and GNContext.cpp.
-        // TODO: use new getdns.Context(...args) when not supporting node.js v4 anymore.
-        const tooManyArgumentsTypeError = new TypeError("Too many arguments.");
-        tooManyArgumentsTypeError.code = getdns.constants.RETURN_INVALID_PARAMETER;
-
-        throw tooManyArgumentsTypeError;
-    }
-
-    const ctx = new getdns.Context(options);
-    const oldDestroyFunc = ctx.destroy;
-    let destroyed = false;
-
-    ctx.destroy = function() {
-        if (destroyed) {
-            return false;
-        }
-        destroyed = true;
-        setImmediate(function() {
-            oldDestroyFunc.call(ctx);
-        });
-        return true;
-    };
-
-    // Add the wrappers for more consistent getdns API.
-    ctx.general = function() {
-        return ctx.lookup.apply(ctx, arguments);
-    };
-
-    ctx.address = function() {
-        return ctx.getAddress.apply(ctx, arguments);
-    };
-
-    ctx.service = function() {
-        return ctx.getService.apply(ctx, arguments);
-    };
-
-    ctx.hostname = function() {
-        return ctx.getHostname.apply(ctx, arguments);
-    };
-
-    return ctx;
+const initialize = () => {
+    // Dump segfault stacktraces both to the console and to a file.
+    const segfaultDumpFilename = "crash.log";
+    segfaultHandler.registerHandler(segfaultDumpFilename);
 };
+
+const destroyContext = (ctx, done) => {
+    expect(ctx.destroy()).to.be.ok();
+    expect(ctx.destroy()).to.not.be.ok();
+    done();
+};
+
+const api = {
+    initialize: initialize,
+    destroyContext: destroyContext,
+};
+
+module.exports = api;

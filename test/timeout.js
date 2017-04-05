@@ -25,55 +25,48 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* global
+describe:false,
+it:false,
+*/
+
 "use strict";
 
-const getdns = require("bindings")("getdns");
+const expect = require("expect.js");
+const getdns = require("../");
+const shared = require("./shared");
 
-// Export constants directly.
-module.exports = getdns.constants;
+shared.initialize();
 
-// Wrap context creation.
-module.exports.createContext = function(options) {
-    if (arguments.length > 1) {
-        // NOTE: duplicated in getdns.js and GNContext.cpp.
-        // TODO: use new getdns.Context(...args) when not supporting node.js v4 anymore.
-        const tooManyArgumentsTypeError = new TypeError("Too many arguments.");
-        tooManyArgumentsTypeError.code = getdns.constants.RETURN_INVALID_PARAMETER;
-
-        throw tooManyArgumentsTypeError;
-    }
-
-    const ctx = new getdns.Context(options);
-    const oldDestroyFunc = ctx.destroy;
-    let destroyed = false;
-
-    ctx.destroy = function() {
-        if (destroyed) {
-            return false;
-        }
-        destroyed = true;
-        setImmediate(function() {
-            oldDestroyFunc.call(ctx);
+describe("Timeouts", () => {
+    it("Should timeout", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+            timeout: 1,
         });
-        return true;
-    };
 
-    // Add the wrappers for more consistent getdns API.
-    ctx.general = function() {
-        return ctx.lookup.apply(ctx, arguments);
-    };
+        ctx.address("getdnsapi.net", (err, result) => {
+            expect(err).to.be.an("object");
+            expect(result).to.be(null);
+            expect(err).to.have.property("msg");
+            expect(err).to.have.property("code");
+            expect(err.code).to.be(getdns.CALLBACK_TIMEOUT);
+            shared.destroyContext(ctx, done);
+        });
+    });
 
-    ctx.address = function() {
-        return ctx.getAddress.apply(ctx, arguments);
-    };
+    it("Should not timeout", function(done) {
+        const ctx = getdns.createContext({
+            resolution_type: getdns.RESOLUTION_STUB,
+            timeout: 10000,
+        });
 
-    ctx.service = function() {
-        return ctx.getService.apply(ctx, arguments);
-    };
-
-    ctx.hostname = function() {
-        return ctx.getHostname.apply(ctx, arguments);
-    };
-
-    return ctx;
-};
+        ctx.address("getdnsapi.net", (err, result) => {
+            expect(err).to.be(null);
+            expect(result).to.be.an("object");
+            expect(result.replies_full).to.be.an(Array);
+            expect(result.replies_full).to.not.be.empty();
+            shared.destroyContext(ctx, done);
+        });
+    });
+});

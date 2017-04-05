@@ -8,7 +8,7 @@
   Node.js bindings of <a href="https://getdnsapi.net/">getdns</a>, a modern asynchronous DNS API.
 </p>
 <p align="center">
-  <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
+  <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node">Github</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
   <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
 </p>
 
@@ -38,28 +38,34 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
   - [SSH Public Key Fingerprint (SSHFP)](https://en.wikipedia.org/wiki/SSHFP_Resource_Record)
 
 
+
 ## Installation and Requirements
 
-- The [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
-- The [Unbound](https://unbound.net/) DNS resolver installed with a trust anchor for DNSSEC validation.
+- [Node.js](https://nodejs.org/) **v7.x.x**, **v6.x.x**, **v4.x.x**; current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
+- [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
+  - [Unbound](https://unbound.net/) DNS resolver **v1.4.16** or later, installed with a trust anchor for DNSSEC validation.
+  - [OpenSSL](https://www.openssl.org/) **v1.0.2** or later.
 
 ```shell
 # In your project directory.
 npm install --save getdns
 ```
 
-Aim is to support current Node.js versions, including [long-term support (LTS)](https://github.com/nodejs/LTS).
-
-  - v7.x.x
-  - v6.x.x
-  - v4.x.x
-  - Older versions *might* still work with the `--harmony` flag, but are unsupported.
+- Older versions/combinations of dependencies *may* be supported in the special `support/` branches. Support branches contain minimal patches to get that particular combination running — quite possibly with a restricted set of features. They are not actively maintained, and may be rebased if required.
+- Older Node.js versions *might* still work with the `--harmony` flag, but are unsupported.
 
 
 
 ## API Examples
 
-See the `samples/` folder for more.
+See the [`samples/`](samples/) folder for more.
+
+- [`samples/example-raw.js`](samples/example-raw.js)
+  - `node samples/example-raw.js [hostname] [record type]`
+  - `node samples/example-raw.js wikipedia.org TXT`
+- [samples/getdns-console-pretty/](samples/getdns-console-pretty/)
+- [samples/getdns-resolver-check-tls/](samples/getdns-resolver-check-tls/)
+- [samples/getdns-node-sample-resolver-check-tls/](samples/getdns-node-sample-resolver-check-tls/)
 
 ```javascript
 var getdns = require("getdns");
@@ -76,8 +82,6 @@ var options = {
     ],
     // Request timeout time in milliseconds.
     timeout: 1000,
-    // NOTE: optionally enforce DNSSEC security validation.
-    //dnssec_return_only_secure: true,
     // Always return DNSSEC status.
     return_dnssec_status: true
 };
@@ -102,9 +106,15 @@ var callback = function(err, result) {
     context.destroy();
 };
 
+// NOTE: the extensions parameter is optional.
+var extensions = {
+  // NOTE: enforce DNSSEC security validation and return only secure replies.
+  //dnssec_return_only_secure: true,
+};
+
 // Simple domain name-to-ip address lookup.
 // Always returns both IPv4 and IPv6 results, if available.
-var transactionId = context.address("wikipedia.org", callback);
+var transactionId = context.address("wikipedia.org", extensions, callback);
 ```
 
 
@@ -121,21 +131,15 @@ When a context object is garbage collected, the underlying resources are freed u
 
 ### Response format
 
-A response to the callback is the JS representation of the `getdns_dict` response dictionary.
+A response to the callback is the javascript object representation of the `getdns_dict` response dictionary.
 
-Bindatas are converted to strings when possible:
+Any `bindata` objects are converted into Node.js buffers, or converted to strings when possible:
 
-- getdns IP address dictionary to IP string
-- printable bindata
-- wire format dname
+- Getdns IP address dictionary to IP string.
+- Printable bindata.
+- Wire format dname.
 
-All other bindata objects are converted into Node.js buffers (represented below as <node buffer>)
-
-Also see the output of the examples:
-
-- `node samples/example-raw.js`
-- `samples/getdns-console-pretty/`
-- `samples/getdns-resolver-check-tls/`
+In the sample below buffers are represented as `<Buffer length nnnn>`. Some lines have been removed; `<Removed lines nnnn>`. Also see the output of the examples for reference.
 
 
 ```javascript
@@ -143,71 +147,27 @@ Also see the output of the examples:
   "answer_type": 800,
   "canonical_name": "getdnsapi.net.",
   "just_address_answers": [
-    "213.154.224.149",
-    "2001:7b8:206:1:b0ef:31::"
+    "2a04:b900:0:100::37",
+    "185.49.141.37"
   ],
   "replies_full": [
-    "<node buffer>", "<node buffer>"
+    "<Buffer length 677>",
+    "<Buffer length 677>"
   ],
   "replies_tree": [
     {
       "additional": [
-
+        "<Removed lines 39>"
       ],
       "answer": [
         {
           "class": 1,
           "name": "getdnsapi.net.",
           "rdata": {
-            "ipv4_address": "213.154.224.149",
-            "rdata_raw": "<node buffer>"
+            "ipv6_address": "2a04:b900:0:100::37",
+            "rdata_raw": "<Buffer length 16>"
           },
-          "ttl": 120,
-          "type": 1
-        }
-      ],
-      "answer_type": 800,
-      "authority": [
-
-      ],
-      "canonical_name": "getdnsapi.net.",
-      "dnssec_status": 403,
-      "header": {
-        "aa": 0,
-        "ad": 0,
-        "ancount": 1,
-        "arcount": 0,
-        "cd": 0,
-        "id": 0,
-        "nscount": 0,
-        "opcode": 0,
-        "qdcount": 1,
-        "qr": 1,
-        "ra": 1,
-        "rcode": 0,
-        "rd": 1,
-        "tc": 0,
-        "z": 0
-      },
-      "question": {
-        "qclass": 1,
-        "qname": "getdnsapi.net.",
-        "qtype": 1
-      }
-    },
-    {
-      "additional": [
-
-      ],
-      "answer": [
-        {
-          "class": 1,
-          "name": "getdnsapi.net.",
-          "rdata": {
-            "ipv6_address": "2001:7b8:206:1:b0ef:31::",
-            "rdata_raw": "<node buffer>"
-          },
-          "ttl": 120,
+          "ttl": 450,
           "type": 28
         },
         {
@@ -215,52 +175,34 @@ Also see the output of the examples:
           "name": "getdnsapi.net.",
           "rdata": {
             "algorithm": 7,
-            "key_tag": 5508,
+            "key_tag": 32852,
             "labels": 2,
             "original_ttl": 450,
-            "rdata_raw": "<node buffer>",
-            "signature": "<node buffer>",
-            "signature_expiration": 1395047438,
-            "signature_inception": 1393850787,
+            "rdata_raw": "<Buffer length 161>",
+            "signature": "<Buffer length 128>",
+            "signature_expiration": 1491862518,
+            "signature_inception": 1490027744,
             "signers_name": "getdnsapi.net.",
             "type_covered": 28
           },
-          "ttl": 120,
-          "type": 46
-        },
-        {
-          "class": 1,
-          "name": "getdnsapi.net.",
-          "rdata": {
-            "algorithm": 8,
-            "key_tag": 123,
-            "labels": 2,
-            "original_ttl": 450,
-            "rdata_raw": "<node buffer>",
-            "signature": "<node buffer>",
-            "signature_expiration": 1395117010,
-            "signature_inception": 1393907439,
-            "signers_name": "getdnsapi.net.",
-            "type_covered": 28
-          },
-          "ttl": 120,
+          "ttl": 450,
           "type": 46
         }
       ],
       "answer_type": 800,
       "authority": [
-
+        "<Removed lines 48>"
       ],
       "canonical_name": "getdnsapi.net.",
-      "dnssec_status": 403,
+      "dnssec_status": 400,
       "header": {
         "aa": 0,
-        "ad": 0,
-        "ancount": 3,
-        "arcount": 0,
+        "ad": 1,
+        "ancount": 2,
+        "arcount": 3,
         "cd": 0,
         "id": 0,
-        "nscount": 0,
+        "nscount": 4,
         "opcode": 0,
         "qdcount": 1,
         "qr": 1,
@@ -275,6 +217,39 @@ Also see the output of the examples:
         "qname": "getdnsapi.net.",
         "qtype": 28
       }
+    },
+    {
+      "additional": [
+        "<Removed lines 69>"
+      ],
+      "answer_type": 800,
+      "authority": [
+        "<Removed lines 48>"
+      ],
+      "canonical_name": "getdnsapi.net.",
+      "dnssec_status": 400,
+      "header": {
+        "aa": 0,
+        "ad": 1,
+        "ancount": 2,
+        "arcount": 3,
+        "cd": 0,
+        "id": 0,
+        "nscount": 4,
+        "opcode": 0,
+        "qdcount": 1,
+        "qr": 1,
+        "ra": 1,
+        "rcode": 0,
+        "rd": 1,
+        "tc": 0,
+        "z": 0
+      },
+      "question": {
+        "qclass": 1,
+        "qname": "getdnsapi.net.",
+        "qtype": 1
+      }
     }
   ],
   "status": 900
@@ -284,7 +259,7 @@ Also see the output of the examples:
 
 ### Constants
 
-All constants defined in `<getdns/getdns.h>` are exposed in the module. The `GETDNS_` prefix is removed. As an example, to get/filter out only secure replies, one may do something like:
+All constants defined in [`<getdns/getdns.h>`](https://www.getdnsapi.net/doxygen/1.0.0/getdns_8h.html) and [`<getdns/getdns_extra.h>`](https://www.getdnsapi.net/doxygen/1.0.0/getdns__extra_8h.html) are exposed in the module. The `GETDNS_` prefix is removed. As an example, to get/filter out only secure replies, one may do something like:
 
 ```javascript
 var dnssecSecureReplies = result.replies_tree.filter(function(reply) {
@@ -445,21 +420,53 @@ context.namespaces = [
 
 ## Building and testing
 
-Patches are welcome!
+- Development follows [git-flow](http://danielkummer.github.io/git-flow-cheatsheet/) using the AVH edition of [`git flow`](https://github.com/petervanderdoes/gitflow-avh).
+- Patches are welcome!
 
 ```shell
-# In the source directory.
+# Navigate to your getdns-node source folder.
+
+# Enable git flow in your local clone.
+git flow init -d
+
+# Install dependencies, dev-dependencies, (re)build the package.
 npm install
 
-# If editing C++ code and headers in in src/ either build or rebuild the module as necessary.
-node-gyp rebuild
+# If editing C++ code (and headers) in src/ either build (or rebuild) the module as necessary.
+npm run --silent build
 
-# Test against live DNS servers.
+# Please add tests for any changes. More and diverse tests are better.
+# See if there is a specific file matching your change, or create a new.
+# NOTE: you can run tests per file.
+npm run --silent test:run -- test/dnssec.js
+
+# Run all tests against live DNS servers. The build server will also run these.
 # NOTE: some tests may fail intermittently, depending on internet connection and upstream DNS servers. Rerun to verify.
 npm run --silent test
+
+# Now submit your pull request, and be ready for it to be scrutinized.
+# Don't take comments nor change requests personally.
+# Thank you in advance! =)
 ```
 
 Note that the tests require an internet connection, [getdns](https://getdnsapi.net/), and [Unbound with a trust anchor to be installed](https://unbound.net/) to pass. Please consult the getdns documentation on the expected location of the trust anchor. Because of testing over the internet against live DNS servers, some tests may fail intermittently. If so, rerun to verify.
+
+
+
+# Contributors
+
+See also getdns-node [committers](https://github.com/getdnsapi/getdns-node/graphs/contributors) and getdns [committers](https://github.com/getdnsapi/getdns/graphs/contributors), [contributors](https://github.com/getdnsapi/getdns#contributors), and [acknowledgements](https://github.com/getdnsapi/getdns#acknowledgements).
+
+|   | Contributor |
+| :---: | --- |
+| <img src="https://github.com/saghul.png?size=48" width="48" /> | Saúl Ibarra Corretgé<br />[@saghul](https://github.com/saghul) |
+| <img src="https://github.com/ngoyal.png?size=48" width="48" /> | Neel Goyal<br />[ngoyal](https://github.com/ngoyal) |
+| <img src="https://github.com/anthonykirby.png?size=48" width="48" /> | Anthony Kirby<br />[@anthonykirby](https://github.com/anthonykirby) |
+| <img src="https://github.com/joelpurra.png?size=48" width="48" /> | Joel Purra<br />[@joelpurra](https://github.com/joelpurra) |
+| <img src="https://github.com/wtoorop.png?size=48" width="48" /> | Willem Toorop<br />[@wtoorop](https://github.com/wtoorop) |
+| <img src="https://github.com/gmadkat.png?size=48" width="48" /> | Gowri Visweswaran<br />[@gmadkat](https://github.com/gmadkat) |
+
+Want to be on this list? Fastest way is to fix a spelling mistake 😃
 
 
 
