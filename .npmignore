@@ -1,1 +1,13 @@
 *
+!.eslintignore
+!.eslintrc
+!binding.gyp
+!getdns.js
+!LICENSE
+!package.json
+!README.md
+!resources/logo/*.png
+!samples/example-raw.js
+!src/*.cpp
+!src/*.h
+!test/*.js
