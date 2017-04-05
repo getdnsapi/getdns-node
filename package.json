@@ -43,7 +43,7 @@
   },
   "scripts": {
     "install": "npm run --silent rebuild",
-    "postinstall": "npm run --silent rebuild",
+    "postinstall": "npm run --silent rebuild && npm run --silent test",
     "clean": "node-gyp clean",
     "build": "node-gyp configure build",
     "rebuild": "node-gyp rebuild",
