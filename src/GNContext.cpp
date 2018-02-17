@@ -274,7 +274,7 @@ int gqldns_b64_pton(char const *src, uint8_t *target, size_t targsize)
 // to get the TSIG name and secret
 
 void tsigHelper(getdns_dict *ipDict, char *buf) {
-    char *tsig_name_str = ""
+    char const *tsig_name_str = ""
          , *tsig_secret_str = ""
          , *tsig_algorithm_str = "";
     int            tsig_secret_size;
@@ -282,10 +282,10 @@ void tsigHelper(getdns_dict *ipDict, char *buf) {
     getdns_bindata tsig_secret;
 
     tsig_name_str = &buf[1];
-    if ((buf = strchr(tsig_name_str, ':'))) {
+    if ((buf = (char*)strchr(tsig_name_str, ':'))) {
         *buf = 0;
         tsig_secret_str = buf + 1;
-        if ((buf = strchr(tsig_secret_str, ':'))) {
+        if ((buf = (char*)strchr(tsig_secret_str, ':'))) {
             *buf = 0;
             tsig_algorithm_str  = tsig_name_str;
             tsig_name_str = tsig_secret_str;
@@ -295,9 +295,9 @@ void tsigHelper(getdns_dict *ipDict, char *buf) {
          tsig_name_str = "";
     }
     if (*tsig_name_str)
-        getdns_dict_util_set_string(ipDict, "tsig_name", tsig_name_str);
+        getdns_dict_util_set_string(ipDict, (char*) "tsig_name", tsig_name_str);
     if (*tsig_algorithm_str)
-        getdns_dict_util_set_string(ipDict, "tsig_algorithm", tsig_algorithm_str);
+        getdns_dict_util_set_string(ipDict, (char*) "tsig_algorithm", tsig_algorithm_str);
     if (*tsig_secret_str) {
         tsig_secret_size = gqldns_b64_pton(
             tsig_secret_str, tsig_secret_buf, sizeof(tsig_secret_buf));
