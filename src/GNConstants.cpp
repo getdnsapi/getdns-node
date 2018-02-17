@@ -33,13 +33,13 @@
 using namespace v8;
 
 static inline void SetConstant(const char* name, int value, Local<Object> exports) {
-    exports->ForceSet(Nan::New<String>(name).ToLocalChecked(), Nan::New<Integer>(value), ReadOnly);
+    Nan::ForceSet(exports, Nan::New<String>(name).ToLocalChecked(), Nan::New<Integer>(value), ReadOnly);
 }
 
 void GNConstants::Init(Local<Object> target) {
 
     Local<Object> exports = Nan::New<Object>();
-    target->ForceSet(Nan::New<String>("constants").ToLocalChecked(), exports, ReadOnly);
+    Nan::ForceSet(target, Nan::New<String>("constants").ToLocalChecked(), exports, ReadOnly);
 
     SetConstant("RETURN_GOOD",GETDNS_RETURN_GOOD,exports);
     SetConstant("RETURN_GENERIC_ERROR",GETDNS_RETURN_GENERIC_ERROR,exports);
