@@ -715,7 +715,7 @@ void GNContext::ApplyOptions(Local<Object> self, Local<Value> optsV) {
         }
     }
     // walk properties
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
     for(unsigned int i = 0; i < names->Length(); i++) {
         Local<Value> nameVal = names->Get(i);
         Local<Value> opt = opts->Get(nameVal);
@@ -796,7 +796,7 @@ NAN_METHOD(GNContext::New) {
         // Apply options if needed
         if (info.Length() == 1) {
             // could throw an
-            TryCatch try_catch;
+            Nan::TryCatch try_catch;
             GNContext::ApplyOptions(info.This(), info[0]);
             if (try_catch.HasCaught()) {
                 // Need to bail
@@ -828,12 +828,12 @@ void GNContext::Callback(getdns_context *context,
         argv[0] = makeErrorObj("Lookup failed.", cbType);
         argv[1] = Nan::Null();
     }
-    TryCatch try_catch;
+    Nan::TryCatch try_catch;
     argv[2] = GNUtil::convertToBuffer(&transId, 8);
     data->callback->Call(Nan::GetCurrentContext()->Global(), 3, argv);
 
     if (try_catch.HasCaught())
-        node::FatalException(try_catch);
+        Nan::FatalException(try_catch);
 
     // Unref
     data->ctx->Unref();
