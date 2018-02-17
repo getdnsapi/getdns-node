@@ -41,7 +41,7 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
 
 ## Installation and Requirements
 
-- [Node.js](https://nodejs.org/) **v7.x.x**, **v6.x.x**, **v4.x.x**; current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
+- [Node.js](https://nodejs.org/) **v9.x.x**, **v8.x.x**, **v6.x.x**, **v4.x.x**; current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
 - [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
   - [Unbound](https://unbound.net/) DNS resolver **v1.4.16** or later, installed with a trust anchor for DNSSEC validation.
   - [OpenSSL](https://www.openssl.org/) **v1.0.2** or later.
