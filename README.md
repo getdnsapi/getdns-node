@@ -41,10 +41,13 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
 
 ## Installation and Requirements
 
-- [Node.js](https://nodejs.org/) **v7.x.x**, **v6.x.x**, **v4.x.x**; current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
-- [getdns](https://getdnsapi.net/) C library **v1.0.0** or later; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
-  - [Unbound](https://unbound.net/) DNS resolver **v1.4.16** or later, installed with a trust anchor for DNSSEC validation.
-  - [OpenSSL](https://www.openssl.org/) **v1.0.2** or later.
+- [Node.js](https://nodejs.org/) current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
+  - Tested against **v9.x.x**, v8.x.x, v6.x.x, v4.x.x.
+- [getdns](https://getdnsapi.net/) C library; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
+  - Tested against **v1.3.0**, v1.2.1, v1.1.2, v1.0.0.
+- [A root trust anchor for DNSSEC validation](https://getdnsapi.net/documentation/readme/#dnssec-dependencies)
+- [Unbound](https://unbound.net/) DNS resolver **v1.4.16** or later.
+- [OpenSSL](https://www.openssl.org/) **v1.0.2** or later.
 
 ```shell
 # In your project directory.
@@ -472,4 +475,4 @@ Want to be on this list? Fastest way is to fix a spelling mistake 😃
 
 ---
 
-<a href="https://getdnsapi.net/"><img src="resources/logo/getdns-64x.png" alt="getdns logotype" title="getdns" width="64" height="21" border="0" /></a> [getdnsapi/getdns-node](https://github.com/getdnsapi/getdns-node) Copyright &copy; 2014, 2015, 2016, 2017, Verisign, Inc. All rights reserved. Released under the [BSD 3-clause License](https://opensource.org/licenses/BSD-3-Clause).
+<a href="https://getdnsapi.net/"><img src="resources/logo/getdns-64x.png" alt="getdns logotype" title="getdns" width="64" height="21" border="0" /></a> [getdnsapi/getdns-node](https://github.com/getdnsapi/getdns-node) Copyright &copy; 2014, 2015, 2016, 2017, 2018, Verisign, Inc. All rights reserved. Released under the [BSD 3-clause License](https://opensource.org/licenses/BSD-3-Clause).

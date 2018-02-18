@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, 2016, 2017, Verisign, Inc.
+ * Copyright (c) 2014, 2015, 2016, 2017, 2018, Verisign, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,111 +39,167 @@ const shared = require("./shared");
 shared.initialize();
 
 describe("TLS", () => {
-    it("Should fail", function(done) {
-        const ctx = getdns.createContext({
-            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+    const TEST_GOOD_DOMAIN = "getdnsapi.net";
+    const TEST_GOOD_DOMAIN_TLS = "starttls.verisignlabs.com";
+    const TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_1 = [
+        "185.49.141.37",
+        853,
+        "getdnsapi.net",
+    ];
+    const TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_2 = [
+        "145.100.185.15",
+        853,
+        "dnsovertls.sinodun.com",
+    ];
+
+    describe("Basic", () => {
+        it("Should fail", function(done) {
+            const ctx = getdns.createContext({
+                // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be.an("object");
+                expect(err.code).to.be.an("number");
+                expect(err.code).to.be(getdns.RETURN_BAD_CONTEXT);
+                expect(result).to.be(undefined);
+                shared.destroyContext(ctx, done);
+            });
         });
 
-        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be.an("object");
-            expect(err.code).to.be.an("number");
-            expect(err.code).to.be(getdns.RETURN_BAD_CONTEXT);
-            expect(result).to.be(undefined);
-            shared.destroyContext(ctx, done);
-        });
-    });
+        it("With TCP fallback should return replies", function(done) {
+            const ctx = getdns.createContext({
+                // NOTE: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN ha been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
+            });
 
-    it("With TCP fallback should return replies", function(done) {
-        const ctx = getdns.createContext({
-            // NOTE: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN ha been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
-        });
-
-        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be(null);
-            expect(result.replies_tree).to.be.an(Array);
-            expect(result.replies_tree).to.not.be.empty();
-            shared.destroyContext(ctx, done);
-        });
-    });
-
-    it("Hostname validation mode should fail", function(done) {
-        const ctx = getdns.createContext({
-            tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
-
-            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+            ctx.general(TEST_GOOD_DOMAIN, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
 
-        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be.an("object");
-            expect(err.code).to.be.an("number");
-            expect(err.code).to.be(getdns.RETURN_BAD_CONTEXT);
-            expect(result).to.be(undefined);
-            shared.destroyContext(ctx, done);
-        });
-    });
-
-    it("Hostname validation in stub should return replies", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                [
-                    "185.49.141.38",
-                    853,
-                    "getdnsapi.net",
+        it("Only TLS in stub mode should return replies", function(done) {
+            const ctx = getdns.createContext({
+                resolution_type: getdns.RESOLUTION_STUB,
+                upstream_recursive_servers: [
+                    TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_1,
                 ],
-            ],
-            tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
 
-            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+                // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN_TLS, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
 
-        ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be(null);
-            expect(result.replies_tree).to.be.an(Array);
-            expect(result.replies_tree).to.not.be.empty();
-            shared.destroyContext(ctx, done);
+        it("With fallback to TCP in stub mode should return replies", function(done) {
+            const ctx = getdns.createContext({
+                resolution_type: getdns.RESOLUTION_STUB,
+                upstream_recursive_servers: [
+                    TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_2,
+                ],
+
+                // NOTE: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN ha been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
     });
 
-    it("Only TLS in stub mode should return replies", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "173.255.254.151",
-            ],
+    describe("Hostname validation", () => {
+        it("Should fail", function(done) {
+            const ctx = getdns.createContext({
+                tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
 
-            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+                // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be.an("object");
+                expect(err.code).to.be.an("number");
+                expect(err.code).to.be(getdns.RETURN_BAD_CONTEXT);
+                expect(result).to.be(undefined);
+                shared.destroyContext(ctx, done);
+            });
         });
 
-        ctx.general("starttls.verisignlabs.com", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be(null);
-            expect(result.replies_tree).to.be.an(Array);
-            expect(result.replies_tree).to.not.be.empty();
-            shared.destroyContext(ctx, done);
+        it("In stub mode should return replies", function(done) {
+            const ctx = getdns.createContext({
+                resolution_type: getdns.RESOLUTION_STUB,
+                upstream_recursive_servers: [
+                    TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_2,
+                ],
+                tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
+
+            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
+                dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN_TLS, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
     });
 
-    it("With fallback to TCP in stub mode should return replies", function(done) {
-        const ctx = getdns.createContext({
-            resolution_type: getdns.RESOLUTION_STUB,
-            upstream_recursive_servers: [
-                "173.255.254.151",
-            ],
+    describe("Transport list", () => {
+        it("Only TLS in stub mode should return replies", function(done) {
+            const ctx = getdns.createContext({
+                resolution_type: getdns.RESOLUTION_STUB,
+                upstream_recursive_servers: [
+                    TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_1,
+                ],
 
-            // NOTE: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN ha been deprecated.
-            dns_transport: getdns.TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN,
+                dns_transport_list: [
+                    getdns.TRANSPORT_TLS,
+                ],
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN_TLS, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
 
-        ctx.general("getdnsapi.net", getdns.RRTYPE_A, (err, result) => {
-            expect(err).to.be(null);
-            expect(result.replies_tree).to.be.an(Array);
-            expect(result.replies_tree).to.not.be.empty();
-            shared.destroyContext(ctx, done);
+        it("With fallback to TCP in stub mode should return replies", function(done) {
+            const ctx = getdns.createContext({
+                resolution_type: getdns.RESOLUTION_STUB,
+                upstream_recursive_servers: [
+                    TEST_GOOD_UPSTREAM_RECURSIVE_SERVER_TLS_HOSTNAME_2,
+                ],
+
+                dns_transport_list: [
+                    getdns.TRANSPORT_TLS,
+                    getdns.TRANSPORT_TCP,
+                ],
+            });
+
+            ctx.general(TEST_GOOD_DOMAIN, getdns.RRTYPE_A, (err, result) => {
+                expect(err).to.be(null);
+                expect(result.replies_tree).to.be.an(Array);
+                expect(result.replies_tree).to.not.be.empty();
+                shared.destroyContext(ctx, done);
+            });
         });
     });
 });

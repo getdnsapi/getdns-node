@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, 2016, 2017, Verisign, Inc.
+ * Copyright (c) 2014, 2015, 2016, 2017, 2018, Verisign, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -475,7 +475,7 @@ getdns_list* GNUtil::convertToList(Local<Array> array) {
         GetdnsType type = getGetdnsType(val);
         switch (type) {
             case IntType:
-                getdns_list_set_int(result, idx, val->ToUint32()->Value());
+                getdns_list_set_int(result, idx, Nan::To<Uint32>(val).ToLocalChecked()->Value());
                 break;
             case BoolType:
                 if (val->IsTrue()) {
@@ -542,7 +542,7 @@ getdns_dict* GNUtil::convertToDict(Local<Object> obj) {
         GetdnsType type = getGetdnsType(val);
         switch (type) {
             case IntType:
-                getdns_dict_set_int(result, *name, val->ToUint32()->Value());
+                getdns_dict_set_int(result, *name, Nan::To<Uint32>(val).ToLocalChecked()->Value());
                 break;
             case BoolType:
                 if (val->IsTrue()) {
