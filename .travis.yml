@@ -23,7 +23,7 @@ before_install:
   - cd ..
   - mkdir -p unbound
   - export UNBOUND_PREFIX="$PWD/unbound"
-  - curl -O https://www.unbound.net/downloads/unbound-1.6.8.tar.gz
+  - curl --location -O https://www.unbound.net/downloads/unbound-1.6.8.tar.gz
   - tar -xf unbound-1.6.8.tar.gz
   - cd unbound-1.6.8
   - ./configure --prefix="$UNBOUND_PREFIX" --with-ssl="$OPENSSL_PREFIX"
