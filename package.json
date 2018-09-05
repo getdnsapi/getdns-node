@@ -35,7 +35,7 @@
     "mocha-parallel-tests": "^1.2.7",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
-    "segfault-handler": "^1.0.0"
+    "segfault-handler": "^1.0.1"
   },
   "engines": {
     "node": "^4.0.0 || ^6.0.0 || ^8.0.0 || ^9.0.0",
