@@ -31,8 +31,8 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^2.1.1",
     "expect.js": "^0.3.1",
-    "mocha": "^3.2.0",
-    "mocha-parallel-tests": "^1.2.7",
+    "mocha": "^5.2.0",
+    "mocha-parallel-tests": "^2.0.4",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.1"
