@@ -16,8 +16,8 @@ const options = {
     stub: true,
     // Upstream recursive servers.. overriden in command line.
     upstreams: [
-     ["64.6.64.6"],
-     // ["185.49.141.38",853,"www.getdnsapi.net"]
+        ["64.6.64.6"],
+        // ["185.49.141.38",853,"www.getdnsapi.net"]
     ],
     // Return dnssec status false for this test.
     return_dnssec_status: false,

@@ -72,7 +72,7 @@ describe("Concurrent queries", () => {
                 });
 
                 shared.destroyContext(ctx, done);
-            }
+            },
         );
     });
 
@@ -96,7 +96,7 @@ describe("Concurrent queries", () => {
                 });
 
                 shared.destroyContext(ctx, done);
-            }
+            },
         );
     });
 
@@ -130,7 +130,7 @@ describe("Concurrent queries", () => {
                         });
 
                         shared.destroyContext(ctx, contextCallback);
-                    }
+                    },
                 );
             },
             (err, result) => {
@@ -140,7 +140,7 @@ describe("Concurrent queries", () => {
                 expect(result).to.have.length(concurrentContexts);
 
                 done();
-            }
+            },
         );
     });
 });

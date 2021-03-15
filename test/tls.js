@@ -147,7 +147,7 @@ describe("TLS", () => {
                 ],
                 tls_authentication: getdns.AUTHENTICATION_HOSTNAME,
 
-            // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
+                // NOTE: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN has been deprecated.
                 dns_transport: getdns.TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN,
             });
 

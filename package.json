@@ -1,6 +1,6 @@
 {
   "name": "getdns",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "getdns bindings for Node.js. getdns is a modern asynchronous DNS API. It implements DNS entry points from a design developed and vetted by application developers, in an API specification.",
   "main": "getdns.js",
   "keywords": [
@@ -21,25 +21,25 @@
     "url": "git+https://github.com/getdnsapi/getdns-node.git"
   },
   "dependencies": {
-    "bindings": "^1.2.1",
-    "nan": "^2.8.0"
+    "bindings": "^1.5.0",
+    "nan": "^2.14.2"
   },
   "devDependencies": {
-    "async": "^2.1.5",
-    "eslint": "^3.18.0",
-    "eslint-config-standard": "^7.1.0",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.1.1",
+    "async": "^3.2.0",
+    "eslint": "^7.22.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.3.1",
     "expect.js": "^0.3.1",
-    "mocha": "^3.2.0",
-    "mocha-parallel-tests": "^1.2.7",
-    "node-gyp": "^3.6.0",
+    "mocha": "^8.3.2",
+    "node-gyp": "^7.1.2",
     "pre-commit": "^1.2.2",
-    "segfault-handler": "^1.0.0"
+    "segfault-handler": "^1.0.1"
   },
   "engines": {
-    "node": "^4.0.0 || ^6.0.0 || ^8.0.0 || ^9.0.0",
-    "npm": "^2.0.0 || ^3.0.0 || ^5.0.0"
+    "node": "^10.0.0 || ^12.0.0 || ^14.0.0",
+    "npm": "^6.0.0 || ^7.0.0"
   },
   "scripts": {
     "clean": "node-gyp clean",
@@ -51,14 +51,15 @@
     "mocha:parallel": "npm run --silent mocha:parallel:run:all",
     "mocha:serial": "npm run --silent mocha:serial:run:all",
     "mocha:run": "npm run --silent mocha:parallel:run --",
-    "mocha:parallel:run": "mocha-parallel-tests --slow 500 --timeout 10000",
+    "mocha:parallel:run": "mocha --parallel --slow 500 --timeout 10000",
     "mocha:serial:run": "mocha --slow 500 --timeout 10000",
     "mocha:run:all": "npm run --silent mocha:parallel:run",
     "mocha:parallel:run:all": "npm run --silent mocha:parallel:run -- test/",
     "mocha:serial:run:all": "npm run --silent mocha:serial:run -- test/",
     "lint": "npm run --silent eslint --",
-    "eslint": "eslint ./src ./test ./samples getdns.js",
-    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js"
+    "lint:fix": "npm run --silent eslint:fix --",
+    "eslint": "eslint ./test ./samples getdns.js",
+    "eslint:fix": "eslint --fix ./test ./samples getdns.js"
   },
   "license": "BSD-3-Clause",
   "bugs": {
