@@ -24,7 +24,7 @@ const replaceBufferWithPlaceholder = (/* eslint-disable no-unused-vars */key/* e
         return value;
     }
 
-    if (value.hasOwnProperty("type") && value.type === "Buffer") {
+    if (Object.prototype.hasOwnProperty.call(value, "type") && value.type === "Buffer") {
         const len = (Array.isArray(value.data) && value.data.length) || 0;
 
         return `<Buffer length ${len}>`;

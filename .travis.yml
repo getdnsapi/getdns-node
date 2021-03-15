@@ -1,47 +1,17 @@
 language: node_js
+dist: focal
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.8
-      - g++-4.8
-env:
-  - CXX=g++-4.8
+      - unbound-anchor
+      - libgetdns10
+      - libgetdns-dev
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install libldns-dev libidn11-dev check libevent-dev unbound-anchor
-  - mkdir -p openssl
-  - export OPENSSL_PREFIX="$PWD/openssl"
-  - curl -O https://www.openssl.org/source/openssl-1.0.2h.tar.gz
-  - tar -xf openssl-1.0.2h.tar.gz
-  - cd openssl-1.0.2h
-  - ./config --prefix="$OPENSSL_PREFIX" --openssldir="${OPENSSL_PREFIX}/etc/ssl" --libdir=lib shared zlib-dynamic
-  - make depend
-  - make
-  - make install
-  - cd ..
-  - mkdir -p unbound
-  - export UNBOUND_PREFIX="$PWD/unbound"
-  - curl --location -O https://www.unbound.net/downloads/unbound-1.6.8.tar.gz
-  - tar -xf unbound-1.6.8.tar.gz
-  - cd unbound-1.6.8
-  - ./configure --prefix="$UNBOUND_PREFIX" --with-ssl="$OPENSSL_PREFIX"
-  - make
-  - make install
-  - cd ..
-  - curl -O https://getdnsapi.net/releases/getdns-1-3-0/getdns-1.3.0.tar.gz
-  - tar -xf getdns-1.3.0.tar.gz
-  - cd getdns-1.3.0
-  - ./configure --with-ssl="$OPENSSL_PREFIX" --with-libunbound="$UNBOUND_PREFIX"
-  - make
-  - sudo make install
-  - cd ..
-  - sudo ldconfig
   - sudo mkdir -p /etc/unbound
   - sudo unbound-anchor -v -a "/etc/unbound/getdns-root.key" || [ -f /etc/unbound/getdns-root.key ]
 node_js:
-  - "6"
-  - "8"
-  - "10"
-  - "node"
+  - 10
+  - 12
+  - 14
+  - lts/*
+  - node
