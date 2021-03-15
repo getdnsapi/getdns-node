@@ -130,7 +130,7 @@ describe("Context Create", () => {
             stub: true,
             upstreams: [
                 "8.8.8.8",
-                    ["127.0.0.1", 53],
+                ["127.0.0.1", 53],
             ],
             timeout: 10,
         });

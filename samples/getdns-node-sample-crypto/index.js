@@ -26,7 +26,7 @@ const MESSAGE = "Hello, World";
 // Context options.
 const options = {
     return_dnssec_status: true,
-  // Request timeout time in millis.
+    // Request timeout time in millis.
     timeout: 5000,
 };
 
@@ -91,9 +91,9 @@ const derToPem = (derBuffer) => {
     const lines = base64Encoded.match(/.{1,63}/g);
 
     const result = ["-----BEGIN CERTIFICATE-----"]
-                .concat(lines)
-                .concat(["-----END CERTIFICATE-----"])
-                .join("\n");
+        .concat(lines)
+        .concat(["-----END CERTIFICATE-----"])
+        .join("\n");
     return result;
 };
 
@@ -120,7 +120,7 @@ const encryptTlsa = (callback) => {
 };
 
 // Do both.
-async.parallel([ encryptPgp, encryptTlsa ], (err, result) => {
+async.parallel([encryptPgp, encryptTlsa], (err, result) => {
     if (err) {
         /* eslint-disable no-console */
         console.log("An error occurred.. " + JSON.stringify(err));
