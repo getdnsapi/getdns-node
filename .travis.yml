@@ -13,9 +13,9 @@ before_install:
   - sudo apt-get install libldns-dev libidn11-dev check libevent-dev unbound-anchor
   - mkdir -p openssl
   - export OPENSSL_PREFIX="$PWD/openssl"
-  - curl -O https://www.openssl.org/source/openssl-1.0.2h.tar.gz
-  - tar -xf openssl-1.0.2h.tar.gz
-  - cd openssl-1.0.2h
+  - curl -O https://www.openssl.org/source/openssl-1.1.1j.tar.gz
+  - tar -xf openssl-1.1.1j.tar.gz
+  - cd openssl-1.1.1j
   - ./config --prefix="$OPENSSL_PREFIX" --openssldir="${OPENSSL_PREFIX}/etc/ssl" --libdir=lib shared zlib-dynamic
   - make depend
   - make
