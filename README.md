@@ -9,10 +9,8 @@
 </p>
 <p align="center">
   <strong>getdns-node:</strong> <a href="https://www.npmjs.com/package/getdns">NPM</a> | <a href="https://github.com/getdnsapi/getdns-node">Github</a> | <a href="https://github.com/getdnsapi/getdns-node/tree/master/samples">Examples</a> | <a href="https://github.com/getdnsapi/getdns-node/issues">Issues</a> | <a href="https://travis-ci.org/getdnsapi/getdns-node"><img src="https://travis-ci.org/getdnsapi/getdns-node.svg?branch=master" alt="getdns-node build status for the master branch" title="getdns-node build status for the master branch" border="0" style="height: 1em;" /></a><br />
-  <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
+  <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://github.com/getdnsapi/getdns">Github</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
 </p>
-
-
 
 ## Features
 
@@ -41,13 +39,12 @@ getdns-node has a few advantages over the [default DNS module in Node.js](https:
 
 ## Installation and Requirements
 
-- [Node.js](https://nodejs.org/) current and [long-term support (LTS)](https://github.com/nodejs/LTS) versions.
-  - Tested against **v14.x.x**, v12.x.x, v10.x.x.
-- [getdns](https://getdnsapi.net/) C library; see [getdns releases](https://getdnsapi.net/releases/) or [getdnsapi/getdns](https://github.com/getdnsapi/getdns).
-  - Tested against **v1.6.0**.
-- [A root trust anchor for DNSSEC validation](https://getdnsapi.net/documentation/readme/#dnssec-dependencies)
-- [Unbound](https://unbound.net/) DNS resolver, tested against **v1.13.1**.
-- [OpenSSL](https://www.openssl.org/) **v1.0.2** or later, tested against **v1.1.1j**.
+- [Node.js](https://nodejs.org/) [long-term support (LTS)](https://github.com/nodejs/Release) versions.
+- [Root trust anchor for DNSSEC validation](https://getdnsapi.net/documentation/readme/#dnssec-dependencies)
+- C libraries:
+  - [getdns](https://getdnsapi.net/) DNS API
+  - [Unbound](https://unbound.net/) DNS resolver
+  - [OpenSSL](https://www.openssl.org/) cryptography toolkit
 
 ```shell
 # In your project directory.
@@ -56,7 +53,7 @@ npm install --save getdns
 
 - Older versions/combinations of dependencies *may* be supported in the special `support/` branches. Support branches contain minimal patches to get that particular combination running — quite possibly with a restricted set of features. They are not actively maintained, and may be rebased if required.
 - Older Node.js versions *might* still work with the `--harmony` flag, but are unsupported.
-
+- See [`.travis.yml`](./.travis.yml) for exact versions used during build tests.
 
 
 ## API Examples
