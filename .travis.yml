@@ -23,9 +23,9 @@ before_install:
   - cd ..
   - mkdir -p unbound
   - export UNBOUND_PREFIX="$PWD/unbound"
-  - curl --location -O https://www.unbound.net/downloads/unbound-1.6.8.tar.gz
-  - tar -xf unbound-1.6.8.tar.gz
-  - cd unbound-1.6.8
+  - curl --location -O https://www.unbound.net/downloads/unbound-1.13.1.tar.gz
+  - tar -xf unbound-1.13.1.tar.gz
+  - cd unbound-1.13.1
   - ./configure --prefix="$UNBOUND_PREFIX" --with-ssl="$OPENSSL_PREFIX"
   - make
   - make install
