@@ -1,6 +1,6 @@
 {
   "name": "getdns",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "getdns bindings for Node.js. getdns is a modern asynchronous DNS API. It implements DNS entry points from a design developed and vetted by application developers, in an API specification.",
   "main": "getdns.js",
   "keywords": [
