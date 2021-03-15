@@ -26,10 +26,11 @@
   },
   "devDependencies": {
     "async": "^3.2.0",
-    "eslint": "^3.18.0",
-    "eslint-config-standard": "^7.1.0",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.1.1",
+    "eslint": "^7.22.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.3.1",
     "expect.js": "^0.3.1",
     "mocha": "^5.2.0",
     "mocha-parallel-tests": "^2.0.4",
@@ -57,8 +58,9 @@
     "mocha:parallel:run:all": "npm run --silent mocha:parallel:run -- test/",
     "mocha:serial:run:all": "npm run --silent mocha:serial:run -- test/",
     "lint": "npm run --silent eslint --",
-    "eslint": "eslint ./src ./test ./samples getdns.js",
-    "eslint:fix": "eslint --fix ./src ./test ./samples getdns.js"
+    "lint:fix": "npm run --silent eslint:fix --",
+    "eslint": "eslint ./test ./samples getdns.js",
+    "eslint:fix": "eslint --fix ./test ./samples getdns.js"
   },
   "license": "BSD-3-Clause",
   "bugs": {
