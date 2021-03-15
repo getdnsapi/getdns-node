@@ -32,8 +32,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.3.1",
     "expect.js": "^0.3.1",
-    "mocha": "^5.2.0",
-    "mocha-parallel-tests": "^2.0.4",
+    "mocha": "^8.3.2",
     "node-gyp": "^3.6.0",
     "pre-commit": "^1.2.2",
     "segfault-handler": "^1.0.1"
@@ -52,7 +51,7 @@
     "mocha:parallel": "npm run --silent mocha:parallel:run:all",
     "mocha:serial": "npm run --silent mocha:serial:run:all",
     "mocha:run": "npm run --silent mocha:parallel:run --",
-    "mocha:parallel:run": "mocha-parallel-tests --slow 500 --timeout 10000",
+    "mocha:parallel:run": "mocha --parallel --slow 500 --timeout 10000",
     "mocha:serial:run": "mocha --slow 500 --timeout 10000",
     "mocha:run:all": "npm run --silent mocha:parallel:run",
     "mocha:parallel:run:all": "npm run --silent mocha:parallel:run -- test/",
