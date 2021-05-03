@@ -9,6 +9,8 @@ addons:
 before_install:
   - sudo mkdir -p /etc/unbound
   - sudo unbound-anchor -v -a "/etc/unbound/getdns-root.key" || [ -f /etc/unbound/getdns-root.key ]
+cache:
+  npm: false
 node_js:
   - 12
   - 14
