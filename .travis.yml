@@ -10,8 +10,8 @@ before_install:
   - sudo mkdir -p /etc/unbound
   - sudo unbound-anchor -v -a "/etc/unbound/getdns-root.key" || [ -f /etc/unbound/getdns-root.key ]
 node_js:
-  - 10
   - 12
   - 14
+  - 16
   - lts/*
   - node

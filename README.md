@@ -52,8 +52,7 @@ npm install --save getdns
 ```
 
 - Older versions/combinations of dependencies *may* be supported in the special `support/` branches. Support branches contain minimal patches to get that particular combination running — quite possibly with a restricted set of features. They are not actively maintained, and may be rebased if required.
-- Older Node.js versions *might* still work with the `--harmony` flag, but are unsupported.
-- See [`.travis.yml`](./.travis.yml) for exact versions used during build tests.
+- See [`.travis.yml`](./.travis.yml) for exact [Node.js versions used by Travis](https://docs.travis-ci.com/user/languages/javascript-with-nodejs/#specifying-nodejs-versions) during build tests.
 
 
 ## API Examples
