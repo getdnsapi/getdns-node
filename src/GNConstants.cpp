@@ -236,5 +236,19 @@ void GNConstants::Init(Local<Object> target) {
     SetConstant("RCODE_BADNAME",GETDNS_RCODE_BADNAME,exports);
     SetConstant("RCODE_BADALG",GETDNS_RCODE_BADALG,exports);
     SetConstant("RCODE_BADTRUNC",GETDNS_RCODE_BADTRUNC,exports);
+
+// NOTE: workaround for breaking change in upstream getdns versions after getdns v1.6.0; GETDNS_RCODE_COOKIE constant was renamed to GETDNS_RCODE_BADCOOKIE.
+// NOTE: the renamed constant has not yet been included in an upstream getdns released, so this is a preemptive measure.
+// https://github.com/getdnsapi/getdns-node/issues/38
+// https://github.com/getdnsapi/getdns/pull/471
+// https://github.com/getdnsapi/getdns/commit/5c79e2c7315f0aa235bb0b2adf26ce2129786e7f
+#ifdef GETDNS_RCODE_BADCOOKIE
+    SetConstant("RCODE_BADCOOKIE",GETDNS_RCODE_BADCOOKIE,exports);
+#else
+    // TODO: remove deprected legacy COOKIE constant support a few major getdns-node releases after BADCOOKIE has been made released in the upstream getdns.
     SetConstant("RCODE_COOKIE",GETDNS_RCODE_COOKIE,exports);
+
+    // NOTE: transitioning the constant; use BADCOOKIE instead of COOKIE (deprecated).
+    SetConstant("RCODE_BADCOOKIE",GETDNS_RCODE_COOKIE,exports);
+#endif
 }
