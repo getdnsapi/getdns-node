@@ -829,7 +829,9 @@ void GNContext::Callback(getdns_context *context,
     }
     Nan::TryCatch try_catch;
     argv[2] = GNUtil::convertToBuffer(&transId, 8);
-    data->callback->Call(Nan::GetCurrentContext()->Global(), 3, argv);
+
+    Nan::AsyncResource callbackAsyncResource("(getdns-node) GNContext::Callback");
+    data->callback->Call(Nan::GetCurrentContext()->Global(), 3, argv, &callbackAsyncResource);
 
     if (try_catch.HasCaught())
         Nan::FatalException(try_catch);
@@ -874,7 +876,8 @@ NAN_METHOD(GNContext::Lookup) {
     if (!ctx || !ctx->context_) {
         Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
         Local<Value> cbArgs[] = { err };
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        Nan::AsyncResource lookupAsyncResource("(getdns-node) GNContext::Lookup (Context is invalid)");
+        lookupAsyncResource.runInAsyncScope(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
         return;
     }
     // take first arg and make it a string
@@ -883,7 +886,8 @@ NAN_METHOD(GNContext::Lookup) {
     if (!info[1]->IsNumber()) {
         Local<Value> err = makeErrorObj("Second argument must be a number", GETDNS_RETURN_INVALID_PARAMETER);
         Local<Value> cbArgs[] = { err };
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        Nan::AsyncResource lookupAsyncResource("(getdns-node) GNContext::Lookup (Second argument must be a number)");
+        lookupAsyncResource.runInAsyncScope(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
         return;
     }
     uint16_t type = (uint16_t) Nan::To<uint32_t>(info[1]).FromJust();
@@ -913,7 +917,8 @@ NAN_METHOD(GNContext::Lookup) {
 
         Local<Value> err = makeErrorObj("Error issuing query", r);
         Local<Value> cbArgs[] = { err };
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        Nan::AsyncResource lookupAsyncResource("(getdns-node) GNContext::Lookup (Error issuing query)");
+        lookupAsyncResource.runInAsyncScope(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
         return;
     }
     // done.
@@ -939,7 +944,8 @@ NAN_METHOD(GNContext::HelperLookup) {
     if (!ctx || !ctx->context_) {
         Local<Value> err = makeErrorObj("Context is invalid", GETDNS_RETURN_GENERIC_ERROR);
         Local<Value> cbArgs[] = { err };
-        Nan::Call(localCb, Nan::GetCurrentContext()->Global(), 1, cbArgs);
+        Nan::AsyncResource helperLookupAsyncResource("(getdns-node) GNContext::HelperLookup (Context is invalid)");
+        helperLookupAsyncResource.runInAsyncScope(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
         return;
     }
     // take first arg and make it a string
@@ -989,7 +995,8 @@ NAN_METHOD(GNContext::HelperLookup) {
 
         Local<Value> err = makeErrorObj("Error issuing query", r);
         Local<Value> cbArgs[] = { err };
-        Nan::MakeCallback(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
+        Nan::AsyncResource helperLookupAsyncResource("(getdns-node) GNContext::HelperLookup (Error issuing query)");
+        helperLookupAsyncResource.runInAsyncScope(Nan::GetCurrentContext()->Global(), localCb, 1, cbArgs);
         return;
     }
     // done. return as buffer
