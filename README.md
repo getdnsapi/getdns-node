@@ -12,6 +12,10 @@
   <strong>getdns:</strong> <a href="https://getdnsapi.net/">Website</a> | <a href="https://github.com/getdnsapi/getdns">Github</a> | <a href="https://getdnsapi.net/documentation/spec/">Specification</a> | <a href="https://getdnsapi.net/presentations/">Presentations</a> | <a href="https://getdnsapi.net/releases/">Releases</a>
 </p>
 
+> [!WARNING]
+> ## This project has been archived
+> No future updates are planned. Feel free to continue using it, but expect no support.
+
 ## Features
 
 getdns-node has a few advantages over the [default DNS module in Node.js](https://nodejs.org/docs/latest/api/dns.html).
